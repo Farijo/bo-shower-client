@@ -1,0 +1,13 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="farijo.com.starcraft_bo_shower.file_explorer.ExplorerLevelFragment">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/explorer_level"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:overScrollMode="never" />
+
+</FrameLayout>
