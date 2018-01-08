@@ -38,47 +38,7 @@ public class BOExplorerActivity extends AppCompatActivity {
 
     private static final String ROOT_NAME = "public";
 
-    static class VirtualFile {
-        final String fileName;
-        boolean local;
-        boolean updateAvailable;
-        long lastModif;
-        private Map<String, VirtualFile> subFiles = null;
-
-        VirtualFile(String n) {
-            fileName = n;
-        }
-
-        VirtualFile(String n, boolean l, long lastm) {
-            fileName = n;
-            local = l;
-            lastModif = lastm;
-        }
-
-        void init() {
-            if (subFiles == null) {
-                subFiles = new HashMap<>();
-            }
-        }
-
-        boolean isFile() {
-            return subFiles == null;
-        }
-
-        boolean containsKey(String key) {
-            return subFiles.containsKey(key);
-        }
-
-        VirtualFile get(String key) {
-            return subFiles.get(key);
-        }
-
-        VirtualFile put(String key, VirtualFile vf) {
-            return subFiles.put(key, vf);
-        }
-    }
-
-    VirtualFile fileSystem = new VirtualFile(ROOT_NAME);
+    VirtualFile fileSystem;
 
     private boolean destroyed = false;
     String toStart = null;
@@ -97,6 +57,8 @@ public class BOExplorerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_boexplorer);
 
+        fileSystem = VirtualFile.loadVirtualFilesLocals(this, ROOT_NAME);
+
         fragPath = (LinearLayout) findViewById(R.id.frag_path);
         ImageView prevFolder = (ImageView) findViewById(R.id.minus_one);
         Picasso.with(this).load(R.drawable.parent_folder).fit().into(prevFolder);
@@ -107,7 +69,6 @@ public class BOExplorerActivity extends AppCompatActivity {
             }
         });
 
-        loadVirtualFilesLocals();
         addFragment(ROOT_NAME);
 
         socketIniter = new Thread() {
@@ -123,7 +84,7 @@ public class BOExplorerActivity extends AppCompatActivity {
                             fileList.add(data);
                         }
                     } while (data != null);
-                    loadVirtualFilesFromStrings(fileList.toArray(new String[fileList.size()]));
+                    fileSystem.loadVirtualFilesFromStrings(fileList.toArray(new String[fileList.size()]));
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -246,59 +207,6 @@ public class BOExplorerActivity extends AppCompatActivity {
             fragmentsList.get(firstIndex - 1).canProceed = true;
         }
         transaction.commit();
-    }
-
-    private void loadVirtualFilesLocals() {
-        List<String> locals = new ArrayList<>();
-        parseFolder(getFilesDir(), locals, fileSystem);
-    }
-
-    private void parseFolder(File folder, List<String> res, VirtualFile parent) {
-        parent.init();
-        if(folder.isFile()) {
-            parent.put(folder.getName(), new VirtualFile(folder.getName(), true, folder.lastModified()));
-            return;
-        }
-        for (File file : folder.listFiles()) {
-            if(!parent.containsKey(file.getName())) {
-                parent.put(file.getName(), new VirtualFile(file.getName(), true, file.lastModified()));
-            }
-            parseFolder(file, res, parent.get(file.getName()));
-        }
-    }
-
-    private void loadVirtualFilesFromStrings(String files[]) {
-        VirtualFile actualVF;
-
-        for (String file : files) {
-            if (file.lastIndexOf('.') <= file.lastIndexOf('/')) {
-                continue;
-            }
-            actualVF = fileSystem;
-            for (String s : file.split("/")) {
-                actualVF.init();
-                if (!actualVF.containsKey(s)) {
-                    actualVF.put(s, new VirtualFile(s));
-                }
-                actualVF = actualVF.get(s);
-            }
-        }
-    }
-
-    public String[] getSubFiles(String fullPath) {
-        VirtualFile actualVF = fileSystem;
-        for (String s : fullPath.split("/")) {
-            if (!actualVF.containsKey(s)) {
-                continue;
-            }
-            actualVF = actualVF.get(s);
-        }
-        if (actualVF.subFiles == null) {
-            return null;
-        }
-        String res[] = new String[actualVF.subFiles.size()];
-        actualVF.subFiles.keySet().toArray(res);
-        return res;
     }
 
     public static void putSizeByteIntoBuffer(InputStream inputStream, OutputStream outputStream) throws IOException {

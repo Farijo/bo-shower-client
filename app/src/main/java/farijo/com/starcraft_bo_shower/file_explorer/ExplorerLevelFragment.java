@@ -44,7 +44,7 @@ public class ExplorerLevelFragment extends Fragment {
 
         RecyclerView recyclerView = ((RecyclerView) v.findViewById(R.id.explorer_level));
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        final String[] data = activity.getSubFiles(fullPath);
+        final String[] data = activity.fileSystem.getSubFiles(fullPath);
         if(data != null) {
             Arrays.sort(data, new Comparator<String>() {
                 @Override
@@ -66,7 +66,7 @@ public class ExplorerLevelFragment extends Fragment {
                     }
                 }
             });
-            recyclerView.setAdapter(new BOFileAdapter(activity, this, data));
+            recyclerView.setAdapter(new BOFileAdapter(activity, this, null));
         }
 
         return v;

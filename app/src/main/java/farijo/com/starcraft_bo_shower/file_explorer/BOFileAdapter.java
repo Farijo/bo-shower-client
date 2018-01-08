@@ -22,9 +22,9 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
 
     private BOExplorerActivity activity;
     private ExplorerLevelFragment fragment;
-    private BOExplorerActivity.VirtualFile[] data;
+    private VirtualFile[] data;
 
-    BOFileAdapter(BOExplorerActivity a, ExplorerLevelFragment f, BOExplorerActivity.VirtualFile[] d) {
+    BOFileAdapter(BOExplorerActivity a, ExplorerLevelFragment f, VirtualFile[] d) {
         activity = a;
         fragment = f;
         data = d;
@@ -38,7 +38,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
             name = (TextView) itemView.findViewById(R.id.name);
         }
 
-        public abstract void setData(BOExplorerActivity.VirtualFile path);
+        public abstract void setData(VirtualFile path);
     }
 
     class FolderViewHolder extends ViewHolder {
@@ -50,7 +50,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
         }
 
         @Override
-        public void setData(BOExplorerActivity.VirtualFile path) {
+        public void setData(VirtualFile path) {
             final String fPath = path.fileName;
             name.setText(fPath);
             itemView.setOnClickListener(new View.OnClickListener() {
@@ -76,7 +76,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
         }
 
         @Override
-        public void setData(BOExplorerActivity.VirtualFile path) {
+        public void setData(VirtualFile path) {
             final String fPath = path.fileName;
             name.setText(fPath);
             final String fullPathPath = fragment.fullPath+"/"+fPath;
