@@ -34,7 +34,7 @@ class VirtualFile {
         return fileName+subFiles.toString();
     }
 
-    void setFolder() {
+    private void setFolder() {
         isFile = false;
     }
 
@@ -42,7 +42,7 @@ class VirtualFile {
         return isFile;
     }
 
-    boolean containsKey(String key) {
+    private boolean containsKey(String key) {
         if(isFile) {
             return false;
         }
@@ -105,10 +105,8 @@ class VirtualFile {
     void loadVirtualFilesFromStrings(String files[]) {
         for (String file : files) {
             VirtualFile actualVF = this;
-            boolean lastIsFile = false;
             for (String s : file.split("/")) {
-                lastIsFile = !actualVF.containsKey(s);
-                if (lastIsFile) {
+                if (!actualVF.containsKey(s)) {
                     actualVF.put(new VirtualFile(s, true));
                 }
                 actualVF = actualVF.get(s);
