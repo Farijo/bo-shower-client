@@ -31,7 +31,7 @@ class VirtualFile {
 
     @Override
     public String toString() {
-        return fileName+subFiles.toString();
+        return (isFile()?"file":"directory")+":"+subFiles.toString();
     }
 
     private void setFolder() {
@@ -68,7 +68,7 @@ class VirtualFile {
         }
     }
 
-    String[] getSubFiles(String fullPath) {
+    VirtualFile[] getSubFiles(String fullPath) {
         VirtualFile actualVF = this;
         if(!fullPath.isEmpty()) {
             for (String s : fullPath.split("/")) {
@@ -78,27 +78,32 @@ class VirtualFile {
                 actualVF = actualVF.get(s);
             }
         }
-        String res[] = new String[actualVF.subFiles.size()];
-        actualVF.subFiles.keySet().toArray(res);
+        VirtualFile res[] = new VirtualFile[actualVF.subFiles.size()];
+        actualVF.subFiles.values().toArray(res);
         return res;
     }
 
-    static VirtualFile loadVirtualFilesLocals(Context context, String rootName) {
-        VirtualFile res = new VirtualFile(rootName, false);
-        parseFolder(context.getFilesDir(), res);
+    static VirtualFile loadVirtualFilesLocals(Context context) {
+        return loadVirtualFilesLocals(context, null);
+    }
+
+    static VirtualFile loadVirtualFilesLocals(Context context, VirtualFile res) {
+        if(res == null) {
+            res = new VirtualFile(".root", false);
+        }
+        parseFolder(new File(context.getFilesDir(), "files/public"), res);
         return res;
     }
 
     private static void parseFolder(File folder, VirtualFile parent) {
-        if(folder.isFile()) {
-            parent.put(new VirtualFile(folder.getName(), true, true, folder.lastModified()));
-            return;
+        if(!parent.containsKey(folder.getName())) {
+            parent.put(new VirtualFile(folder.getName(), true, folder.isFile(), folder.lastModified()));
         }
-        for (File file : folder.listFiles()) {
-            if(!parent.containsKey(file.getName())) {
-                parent.put(new VirtualFile(file.getName(), true, false, file.lastModified()));
+        File[] files = folder.listFiles();
+        if(files != null && files.length > 0) {
+            for (File file : files) {
+                parseFolder(file, parent.get(folder.getName()));
             }
-            parseFolder(file, parent.get(file.getName()));
         }
     }
 
@@ -108,6 +113,8 @@ class VirtualFile {
             for (String s : file.split("/")) {
                 if (!actualVF.containsKey(s)) {
                     actualVF.put(new VirtualFile(s, true));
+                } else {
+                    actualVF.get(s).updateAvailable = true;
                 }
                 actualVF = actualVF.get(s);
             }

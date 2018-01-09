@@ -42,31 +42,29 @@ public class ExplorerLevelFragment extends Fragment {
         final int greyIntensity = 48+fullPath.replaceAll("[^/]", "").length()*15;
         v.setBackgroundColor(Color.rgb(48, 48, 48));
 
-        RecyclerView recyclerView = ((RecyclerView) v.findViewById(R.id.explorer_level));
+        RecyclerView recyclerView = v.findViewById(R.id.explorer_level);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        final String[] data = activity.fileSystem.getSubFiles(fullPath);
+        final VirtualFile[] data = activity.fileSystem.getSubFiles(fullPath);
         if(data != null) {
-            Arrays.sort(data, new Comparator<String>() {
+            Arrays.sort(data, new Comparator<VirtualFile>() {
                 @Override
-                public int compare(String o1, String o2) {
-                    final int indexIfFile1 = o1.lastIndexOf('.');
-                    final int indexIfFile2 = o2.lastIndexOf('.');
-                    if(indexIfFile1 >= 0) {
-                        if(indexIfFile2 >=0) {
-                            return o1.substring(0, indexIfFile1).compareTo(o2.substring(0, indexIfFile2));
+                public int compare(VirtualFile o1, VirtualFile o2) {
+                    if(o1.isFile()) {
+                        if(o2.isFile()) {
+                            return o1.fileName.compareTo(o2.fileName);
                         } else {
                             return 1;
                         }
                     } else {
-                        if(indexIfFile2 >= 0) {
+                        if(o2.isFile()) {
                             return -1;
                         } else {
-                            return o1.compareTo(o2);
+                            return o1.fileName.compareTo(o2.fileName);
                         }
                     }
                 }
             });
-            recyclerView.setAdapter(new BOFileAdapter(activity, this, null));
+            recyclerView.setAdapter(new BOFileAdapter(activity, this, data));
         }
 
         return v;

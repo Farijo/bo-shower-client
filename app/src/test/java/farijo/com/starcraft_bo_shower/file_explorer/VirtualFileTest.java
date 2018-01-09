@@ -41,7 +41,7 @@ public class VirtualFileTest {
 
     @Test
     public void getSubFilesTest() throws Exception {
-        VirtualFile virtualFile = new VirtualFile("filename", false);
+        VirtualFile virtualFile = new VirtualFile("rootFolder", false);
         VirtualFile sonDepth1 = new VirtualFile("filsD1", false);
         VirtualFile sonDepth2 = new VirtualFile("filsD2", false);
         VirtualFile sonDepth2_2 = new VirtualFile("filsD2_2", true);
@@ -54,11 +54,11 @@ public class VirtualFileTest {
         virtualFile.get(sonDepth1.fileName).get(sonDepth2.fileName).put(sonDepth3);
         virtualFile.get(sonDepth1.fileName).get(sonDepth2.fileName).put(sonDepth3_r);
 
-        assertArrayEquals(new String[]{"filsD2", "filsD2_2"}, virtualFile.getSubFiles("filsD1"));
-        assertArrayEquals(new String[]{"filsD3"}, virtualFile.getSubFiles("filsD1/filsD2"));
-        assertArrayEquals(new String[]{"filsD1"}, virtualFile.getSubFiles("/"));
-        assertArrayEquals(new String[]{"filsD1"}, virtualFile.getSubFiles("//"));
-        assertArrayEquals(new String[]{"filsD1"}, virtualFile.getSubFiles(""));
+        assertArrayEquals(new VirtualFile[]{sonDepth2, sonDepth2_2}, virtualFile.getSubFiles("filsD1"));
+        assertArrayEquals(new VirtualFile[]{sonDepth3}, virtualFile.getSubFiles("filsD1/filsD2"));
+        assertArrayEquals(new VirtualFile[]{sonDepth1}, virtualFile.getSubFiles("/"));
+        assertArrayEquals(new VirtualFile[]{sonDepth1}, virtualFile.getSubFiles("//"));
+        assertArrayEquals(new VirtualFile[]{sonDepth1}, virtualFile.getSubFiles(""));
     }
 
     @Test

@@ -4,7 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -23,10 +22,7 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import farijo.com.starcraft_bo_shower.R;
@@ -36,7 +32,7 @@ import static farijo.com.starcraft_bo_shower.file_explorer.ExplorerLevelFragment
 
 public class BOExplorerActivity extends AppCompatActivity {
 
-    private static final String ROOT_NAME = "public";
+    static final String ROOT_NAME = "public";
 
     VirtualFile fileSystem;
 
@@ -57,10 +53,10 @@ public class BOExplorerActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_boexplorer);
 
-        fileSystem = VirtualFile.loadVirtualFilesLocals(this, ROOT_NAME);
+        fileSystem = VirtualFile.loadVirtualFilesLocals(this);
 
-        fragPath = (LinearLayout) findViewById(R.id.frag_path);
-        ImageView prevFolder = (ImageView) findViewById(R.id.minus_one);
+        fragPath = findViewById(R.id.frag_path);
+        ImageView prevFolder = findViewById(R.id.minus_one);
         Picasso.with(this).load(R.drawable.parent_folder).fit().into(prevFolder);
         prevFolder.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -69,14 +65,12 @@ public class BOExplorerActivity extends AppCompatActivity {
             }
         });
 
-        addFragment(ROOT_NAME);
-
         socketIniter = new Thread() {
             @Override
             public void run() {
                 try {
                     List<String> fileList = new ArrayList<>();
-                    socket = new Socket("192.168.1.22", 4040);
+                    socket = new Socket("192.168.1.40", 4040);
                     String data;
                     do {
                         data = receiveSizeByteIntoString(socket.getInputStream());
@@ -114,7 +108,7 @@ public class BOExplorerActivity extends AppCompatActivity {
                             filesToDownload.wait();
                         }
                         final String path = filesToDownload.poll();
-                        final File file = new File(getFilesDir(), path);
+                        final File file = new File(new File(getFilesDir(), "files"), path);
                         file.getParentFile().mkdirs();
                         file.createNewFile();
                         socket.getOutputStream().write(ByteBuffer.wrap((path + '\n').getBytes()).array());
