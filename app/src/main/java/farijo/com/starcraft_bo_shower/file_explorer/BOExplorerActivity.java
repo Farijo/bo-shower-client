@@ -154,12 +154,14 @@ public class BOExplorerActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            addFragment(ROOT_NAME);
-                        }
-                    });
+                    if(!destroyed) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                addFragment(ROOT_NAME);
+                            }
+                        });
+                    }
                 }
             }
         };
@@ -189,7 +191,7 @@ public class BOExplorerActivity extends AppCompatActivity {
     public void addFragment(String path) {
 
         View inflated = LayoutInflater.from(this).inflate(R.layout.one_path, fragPath, false);
-        TextView pathName = (TextView) inflated.findViewById(R.id.path_name);
+        TextView pathName = inflated.findViewById(R.id.path_name);
         pathName.setText(path);
         final int index = fragmentsList.size() + 1;
         pathName.setOnClickListener(new View.OnClickListener() {
