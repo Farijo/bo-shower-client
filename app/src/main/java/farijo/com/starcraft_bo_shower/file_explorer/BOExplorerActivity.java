@@ -1,13 +1,18 @@
 package farijo.com.starcraft_bo_shower.file_explorer;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -18,7 +23,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketAddress;
+import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -65,32 +73,24 @@ public class BOExplorerActivity extends AppCompatActivity {
             }
         });
 
-        socketIniter = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    List<String> fileList = new ArrayList<>();
-                    socket = new Socket("192.168.1.40", 4040);
-                    String data;
-                    do {
-                        data = receiveSizeByteIntoString(socket.getInputStream());
-                        if (data != null) {
-                            fileList.add(data);
-                        }
-                    } while (data != null);
-                    fileSystem.loadVirtualFilesFromStrings(fileList.toArray(new String[fileList.size()]));
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            addFragment(ROOT_NAME);
-                        }
-                    });
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        socketIniter.start();
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.server_chooser, null);
+        final EditText ipServer = dialogView.findViewById(R.id.ip_server);
+        final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
+        portServer.setMaxValue(65535);
+        ipServer.setInputType(InputType.TYPE_CLASS_NUMBER);
+        ipServer.setText("192.168.1.40");
+        portServer.setValue(4040);
+        new AlertDialog.Builder(this)
+                .setTitle("IP & port")
+                .setCancelable(false)
+                .setView(dialogView)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startConnection(ipServer.getText().toString(), portServer.getValue());
+                    }
+                })
+                .show();
 
         new Thread() {
             @Override
@@ -100,7 +100,7 @@ public class BOExplorerActivity extends AppCompatActivity {
                     synchronized (filesToDownload) {
                         while (filesToDownload.isEmpty()) {
                             if (destroyed) {
-                                if(socket != null) {
+                                if (socket != null) {
                                     socket.close();
                                 }
                                 return;
@@ -133,6 +133,37 @@ public class BOExplorerActivity extends AppCompatActivity {
                 run();
             }
         }.start();
+    }
+
+    private void startConnection(final String ip, final int port) {
+        socketIniter = new Thread() {
+            @Override
+            public void run() {
+                try {
+                    socket = new Socket();
+                    socket.connect(new InetSocketAddress(ip, port), 10000);
+                    List<String> fileList = new ArrayList<>();
+                    String data;
+                    do {
+                        data = receiveSizeByteIntoString(socket.getInputStream());
+                        if (data != null) {
+                            fileList.add(data);
+                        }
+                    } while (data != null);
+                    fileSystem.loadVirtualFilesFromStrings(fileList.toArray(new String[fileList.size()]));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            addFragment(ROOT_NAME);
+                        }
+                    });
+                }
+            }
+        };
+        socketIniter.start();
     }
 
     @Override
