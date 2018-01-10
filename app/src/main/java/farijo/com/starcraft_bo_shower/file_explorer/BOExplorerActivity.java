@@ -73,24 +73,7 @@ public class BOExplorerActivity extends AppCompatActivity {
             }
         });
 
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.server_chooser, null);
-        final EditText ipServer = dialogView.findViewById(R.id.ip_server);
-        final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
-        portServer.setMaxValue(65535);
-        ipServer.setInputType(InputType.TYPE_CLASS_NUMBER);
-        ipServer.setText("192.168.1.40");
-        portServer.setValue(4040);
-        new AlertDialog.Builder(this)
-                .setTitle("IP & port")
-                .setCancelable(false)
-                .setView(dialogView)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        startConnection(ipServer.getText().toString(), portServer.getValue());
-                    }
-                })
-                .show();
+        showIpPortDialog();
 
         new Thread() {
             @Override
@@ -133,6 +116,27 @@ public class BOExplorerActivity extends AppCompatActivity {
                 run();
             }
         }.start();
+    }
+
+    private void showIpPortDialog() {
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.server_chooser, null);
+        final EditText ipServer = dialogView.findViewById(R.id.ip_server);
+        final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
+        portServer.setMaxValue(65535);
+        ipServer.setInputType(InputType.TYPE_CLASS_NUMBER);
+        ipServer.setText("192.168.1.40");
+        portServer.setValue(4040);
+        new AlertDialog.Builder(this)
+                .setTitle("IP & port")
+                .setCancelable(false)
+                .setView(dialogView)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        startConnection(ipServer.getText().toString(), portServer.getValue());
+                    }
+                })
+                .show();
     }
 
     private void startConnection(final String ip, final int port) {

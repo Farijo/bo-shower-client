@@ -108,20 +108,48 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
         }
     }
 
-    class FileUpdatableViewHolder extends ViewHolder {
-        View btnUpdateStart;
-        View btnUpdate;
+    class FileLocaleViewHolder extends ViewHolder {
         View btnStart;
 
-        FileUpdatableViewHolder(View itemView) {
+        FileLocaleViewHolder(View itemView) {
             super(itemView);
-            btnUpdateStart = itemView.findViewById(R.id.update_launch);
-            btnUpdate = itemView.findViewById(R.id.update);
             btnStart = itemView.findViewById(R.id.launch_local);
         }
 
         @Override
         public void setData(VirtualFile path) {
+            final String fPath = path.fileName;
+            name.setText(fPath);
+            final String fullPathPath = fragment.fullPath + "/" + fPath;
+            btnStart.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (activity.toStart != null) {
+                        activity.toStart = fullPathPath;
+                        Toast.makeText(activity, "lancement de " + fPath + " dès que le prochain téléchargement termine", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Intent intent = new Intent(activity, BOActivity.class);
+                        intent.putExtra(BOActivity.BO_EXTRA, new File(new File(activity.getFilesDir(), "files"), fullPathPath).getAbsolutePath());
+                        activity.startActivity(intent);
+                    }
+                }
+            });
+        }
+    }
+
+    class FileUpdatableViewHolder extends FileLocaleViewHolder {
+        View btnUpdateStart;
+        View btnUpdate;
+
+        FileUpdatableViewHolder(View itemView) {
+            super(itemView);
+            btnUpdateStart = itemView.findViewById(R.id.update_launch);
+            btnUpdate = itemView.findViewById(R.id.update);
+        }
+
+        @Override
+        public void setData(VirtualFile path) {
+            super.setData(path);
             final String fPath = path.fileName;
             name.setText(fPath);
             final String fullPathPath = fragment.fullPath+"/"+fPath;
@@ -141,19 +169,6 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                     synchronized (activity.filesToDownload) {
                         activity.filesToDownload.add(fullPathPath);
                         activity.filesToDownload.notify();
-                    }
-                }
-            });
-            btnStart.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(activity.toStart != null) {
-                        activity.toStart = fullPathPath;
-                        Toast.makeText(activity, "lancement de "+fPath+" dès que le prochain téléchargement termine", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Intent intent = new Intent(activity, BOActivity.class);
-                        intent.putExtra(BOActivity.BO_EXTRA, new File(new File(activity.getFilesDir(), "files"), fullPathPath).getAbsolutePath());
-                        activity.startActivity(intent);
                     }
                 }
             });
@@ -183,10 +198,11 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
             case FOLDER_TYPE:
                 return new FolderViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_other_folder, parent, false));
             case ONLINE_FILE_TYPE:
-            case LOCAL_FILE_TYPE:
                 return new FileViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_file, parent, false));
             case LOCAL_FILE_UPDATABLE_TYPE:
                 return new FileUpdatableViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_file_updatable, parent, false));
+            case LOCAL_FILE_TYPE:
+                return new FileLocaleViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.item_file_locale, parent, false));
             default:
                 return null;
         }
