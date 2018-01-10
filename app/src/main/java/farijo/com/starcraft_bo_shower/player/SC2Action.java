@@ -57,16 +57,16 @@ public class SC2Action {
         }
     }
 
-    public String population;
-    public String strTiming;
+    String population;
+    String strTiming;
     int onFinish = -1;
     long deltaTiming;
     int timing;
-    public String name;
-    public int ressourceIcon;
-    public int count = 1;
-    public String details;
-    public View view;
+    String name;
+    int ressourceIcon;
+    int count = 1;
+    String details;
+    View view;
 
     SC2Action() {
 

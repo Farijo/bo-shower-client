@@ -24,7 +24,6 @@ import farijo.com.starcraft_bo_shower.R;
 public class BOActivity extends AppCompatActivity {
 
     public static final String BO_EXTRA = "BO";
-    private static double SC2_TIME_RATIO = 1.014;
 
     public Progresser currentProgress;
 
@@ -37,7 +36,7 @@ public class BOActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.bo_title)).setText(file.getName());
         final View optionPan = findViewById(R.id.option_panel);
-        final ImageView optionArrow = ((ImageView) findViewById(R.id.arrow));
+        final ImageView optionArrow = findViewById(R.id.arrow);
         findViewById(R.id.title_panel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -106,7 +105,7 @@ public class BOActivity extends AppCompatActivity {
                             case "time":
                                 currentAction.strTiming = value;
                                 currentAction.timing = Integer.parseInt(value.substring(0, value.indexOf(':'))) * 60 + Integer.parseInt(value.substring(value.indexOf(':') + 1));
-                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming) / SC2_TIME_RATIO);
+                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming));
                                 previousTiming = currentAction.timing;
                                 break;
                             case "prod":
@@ -125,7 +124,7 @@ public class BOActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        RecyclerView recycler = ((RecyclerView) findViewById(R.id.building));
+        RecyclerView recycler = findViewById(R.id.building);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         adapter.notifyDataSetChanged();
         recycler.setAdapter(adapter);
