@@ -44,7 +44,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
             name = itemView.findViewById(R.id.name);
         }
 
-        public abstract void setData(VirtualFile path);
+        public abstract void setData(final String filename);
     }
 
     class FolderViewHolder extends ViewHolder {
@@ -56,15 +56,14 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
         }
 
         @Override
-        public void setData(VirtualFile path) {
-            final String fPath = path.fileName;
-            name.setText(fPath);
+        public void setData(final String filename) {
+            name.setText(filename);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if(fragment.canProceed) {
                         fragment.canProceed = false;
-                        activity.addFragment(fPath);
+                        activity.addFragment(filename);
                     }
                 }
             });
@@ -84,10 +83,9 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
         }
 
         @Override
-        public void setData(VirtualFile path) {
-            final String fPath = path.fileName;
-            name.setText(fPath);
-            final String fullPathPath = fragment.fullPath + "/" + fPath;
+        public void setData(final String filename) {
+            name.setText(filename);
+            final String fullPathPath = fragment.fullPath + "/" + filename;
             if (btnDownloadStart != null) {
                 btnDownloadStart.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -117,7 +115,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                     public void onClick(View v) {
                         if (activity.toStart != null) {
                             activity.toStart = fullPathPath;
-                            Toast.makeText(activity, "lancement de " + fPath + " dès que le prochain téléchargement termine", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(activity, "lancement de " + filename + " dès que le prochain téléchargement termine", Toast.LENGTH_SHORT).show();
                         } else {
                             Intent intent = new Intent(activity, BOActivity.class);
                             intent.putExtra(BOActivity.BO_EXTRA, new File(new File(activity.getFilesDir(), "files"), fullPathPath).getAbsolutePath());
@@ -164,7 +162,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        holder.setData(data[position]);
+        holder.setData(data[position].fileName);
     }
 
     @Override
