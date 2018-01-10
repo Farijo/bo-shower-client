@@ -12,21 +12,21 @@ import java.util.Map;
 
 class VirtualFile {
     final String fileName;
-    final boolean local;
+    final boolean isLocal;
     private boolean isFile;
     boolean updateAvailable;
     private long lastModif;
     private Map<String, VirtualFile> subFiles = new HashMap<>();
 
-    VirtualFile(String n, boolean isF) {
-        this(n, false, isF, 0);
+    VirtualFile(String fileName, boolean isFile) {
+        this(fileName, false, isFile, 0);
     }
 
-    private VirtualFile(String n, boolean l, boolean isF, long lastm) {
-        fileName = n;
-        local = l;
-        isFile = isF;
-        lastModif = lastm;
+    private VirtualFile(String fileName, boolean isLocal, boolean isFile, long lastModif) {
+        this.fileName = fileName;
+        this.isLocal = isLocal;
+        this.isFile = isFile;
+        this.lastModif = lastModif;
     }
 
     @Override

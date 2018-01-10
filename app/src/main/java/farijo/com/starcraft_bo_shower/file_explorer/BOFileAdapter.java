@@ -130,7 +130,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
     @Override
     public int getItemViewType(int position) {
         if(data[position].isFile()) {
-            if(data[position].local) {
+            if(data[position].isLocal) {
                 if(data[position].updateAvailable) {
                     return LOCAL_FILE_UPDATABLE_TYPE;
                 } else {
