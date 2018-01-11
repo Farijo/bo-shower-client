@@ -107,14 +107,17 @@ class VirtualFile {
         }
     }
 
-    void loadVirtualFilesFromStrings(String files[]) {
-        for (String file : files) {
+    void loadVirtualFilesFromStrings(String files[], Long timeUpdate[]) {
+        for (int i = 0; i < files.length; i++) {
             VirtualFile actualVF = this;
-            for (String s : file.split("/")) {
+            for (String s : files[i].split("/")) {
                 if (!actualVF.containsKey(s)) {
                     actualVF.put(new VirtualFile(s, true));
                 } else {
-                    actualVF.get(s).updateAvailable = true;
+                    if(timeUpdate[i] > actualVF.get(s).lastModif) {
+                        actualVF.get(s).updateAvailable = true;
+                        actualVF.get(s).lastModif = timeUpdate[i];
+                    }
                 }
                 actualVF = actualVF.get(s);
             }

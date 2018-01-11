@@ -22,14 +22,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
-import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -92,11 +90,16 @@ public class BOExplorerActivity extends AppCompatActivity {
                         }
                         final String path = filesToDownload.poll();
                         final File file = new File(new File(getFilesDir(), "files"), path);
-                        file.getParentFile().mkdirs();
-                        file.createNewFile();
                         socket.getOutputStream().write(ByteBuffer.wrap((path + '\n').getBytes()).array());
-                        putSizeByteIntoBuffer(socket.getInputStream(), new FileOutputStream(file));
-                        file.setLastModified(0);
+                        byte[] filebytes = putSizeByteIntoBuffer(socket.getInputStream());
+                        if(filebytes != null) {
+                            file.getParentFile().mkdirs();
+                            file.createNewFile();
+                            FileOutputStream fileOutputStream = new FileOutputStream(file);
+                            fileOutputStream.write(filebytes);
+                            fileOutputStream.close();
+                            file.setLastModified(readDate(socket.getInputStream()));
+                        }
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
@@ -147,14 +150,19 @@ public class BOExplorerActivity extends AppCompatActivity {
                     socket = new Socket();
                     socket.connect(new InetSocketAddress(ip, port), 10000);
                     List<String> fileList = new ArrayList<>();
+                    List<Long> fileUpdateTime = new ArrayList<>();
                     String data;
                     do {
                         data = receiveSizeByteIntoString(socket.getInputStream());
                         if (data != null) {
                             fileList.add(data);
+                            fileUpdateTime.add(readDate(socket.getInputStream()));
                         }
                     } while (data != null);
-                    fileSystem.loadVirtualFilesFromStrings(fileList.toArray(new String[fileList.size()]));
+                    fileSystem.loadVirtualFilesFromStrings(
+                            fileList.toArray(new String[fileList.size()]),
+                            fileUpdateTime.toArray(new Long[fileUpdateTime.size()])
+                    );
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -240,15 +248,14 @@ public class BOExplorerActivity extends AppCompatActivity {
         transaction.commit();
     }
 
-    public static void putSizeByteIntoBuffer(InputStream inputStream, OutputStream outputStream) throws IOException {
+    public static byte[] putSizeByteIntoBuffer(InputStream inputStream) throws IOException {
         int size = readShort(inputStream);
         if (size <= 0) {
-            return;
+            return null;
         }
         byte[] dataFile = new byte[size];
         inputStream.read(dataFile);
-        outputStream.write(dataFile);
-        outputStream.close();
+        return dataFile;
     }
 
     public static String receiveSizeByteIntoString(InputStream stream) throws IOException {
@@ -267,6 +274,21 @@ public class BOExplorerActivity extends AppCompatActivity {
         byte[] dataSize = new byte[2];
         inputStream.read(dataSize);
         return ByteBuffer.wrap(dataSize).order(ByteOrder.BIG_ENDIAN).getShort();
+    }
+
+    public static long readDate(InputStream inputStream) throws IOException{
+        byte[] data = new byte[12];
+        inputStream.read(data);
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(0);
+        ByteBuffer buffer = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
+        calendar.set(Calendar.YEAR, buffer.getShort(0));
+        calendar.set(Calendar.MONTH, buffer.getShort(2)-1);
+        calendar.set(Calendar.DAY_OF_MONTH, buffer.getShort(4));
+        calendar.set(Calendar.HOUR_OF_DAY, buffer.getShort(6));
+        calendar.set(Calendar.MINUTE, buffer.getShort(8));
+        calendar.set(Calendar.SECOND, buffer.getShort(10));
+        return calendar.getTimeInMillis();
     }
 }
 

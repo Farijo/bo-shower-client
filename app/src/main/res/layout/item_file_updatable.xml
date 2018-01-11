@@ -33,7 +33,6 @@
             android:layout_height="20dp"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
-            android:accessibilityLiveRegion="@android:drawable/sym_call_incoming"
             app:srcCompat="@android:drawable/sym_call_incoming" />
 
     </RelativeLayout>
