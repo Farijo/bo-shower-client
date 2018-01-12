@@ -12,11 +12,13 @@ import java.util.Map;
 
 class VirtualFile {
     final String fileName;
-    final boolean isLocal;
+    boolean isLocal;
     private boolean isFile;
     boolean updateAvailable;
     private long lastModif;
     private Map<String, VirtualFile> subFiles = new HashMap<>();
+
+    private boolean downloading = false;
 
     VirtualFile(String fileName, boolean isFile) {
         this(fileName, false, isFile, 0);
@@ -27,11 +29,6 @@ class VirtualFile {
         this.isLocal = isLocal;
         this.isFile = isFile;
         this.lastModif = lastModif;
-    }
-
-    @Override
-    public String toString() {
-        return (isFile()?"file":"directory")+":"+subFiles.toString();
     }
 
     private void setFolder() {
@@ -68,6 +65,24 @@ class VirtualFile {
         }
     }
 
+    void startDownload() {
+        downloading = true;
+    }
+
+    void endDownload() {
+        downloading = false;
+        isLocal = true;
+        updateAvailable = false;
+    }
+
+    void endDownloadEmpty() {
+        downloading = false;
+    }
+
+    boolean isDownloading() {
+        return downloading;
+    }
+
     VirtualFile[] getSubFiles(String fullPath) {
         VirtualFile actualVF = this;
         if(!fullPath.isEmpty()) {
@@ -81,6 +96,23 @@ class VirtualFile {
         VirtualFile res[] = new VirtualFile[actualVF.subFiles.size()];
         actualVF.subFiles.values().toArray(res);
         return res;
+    }
+
+    void loadVirtualFilesFromStrings(String files[], Long timeUpdate[]) {
+        for (int i = 0; i < files.length; i++) {
+            VirtualFile actualVF = this;
+            for (String s : files[i].split("/")) {
+                if (!actualVF.containsKey(s)) {
+                    actualVF.put(new VirtualFile(s, true));
+                } else {
+                    if(timeUpdate[i] > actualVF.get(s).lastModif) {
+                        actualVF.get(s).updateAvailable = true;
+                        actualVF.get(s).lastModif = timeUpdate[i];
+                    }
+                }
+                actualVF = actualVF.get(s);
+            }
+        }
     }
 
     static VirtualFile loadVirtualFilesLocals(Context context) {
@@ -103,23 +135,6 @@ class VirtualFile {
         if(files != null && files.length > 0) {
             for (File file : files) {
                 parseFolder(file, parent.get(folder.getName()));
-            }
-        }
-    }
-
-    void loadVirtualFilesFromStrings(String files[], Long timeUpdate[]) {
-        for (int i = 0; i < files.length; i++) {
-            VirtualFile actualVF = this;
-            for (String s : files[i].split("/")) {
-                if (!actualVF.containsKey(s)) {
-                    actualVF.put(new VirtualFile(s, true));
-                } else {
-                    if(timeUpdate[i] > actualVF.get(s).lastModif) {
-                        actualVF.get(s).updateAvailable = true;
-                        actualVF.get(s).lastModif = timeUpdate[i];
-                    }
-                }
-                actualVF = actualVF.get(s);
             }
         }
     }

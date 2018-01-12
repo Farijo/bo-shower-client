@@ -23,6 +23,7 @@ public class ExplorerLevelFragment extends Fragment {
     private BOExplorerActivity activity;
     String fullPath;
     boolean canProceed = true;
+    BOFileAdapter adapter;
 
     public ExplorerLevelFragment() {
         // Required empty public constructor
@@ -64,10 +65,17 @@ public class ExplorerLevelFragment extends Fragment {
                     }
                 }
             });
-            recyclerView.setAdapter(new BOFileAdapter(activity, this, data));
+            recyclerView.setAdapter(adapter = new BOFileAdapter(activity, this, data));
+            activity.activeAdapters.put(adapter.ID, adapter);
         }
 
         return v;
     }
 
+    @Override
+    public void onDestroyView() {
+        activity.activeAdapters.remove(adapter.ID);
+        adapter = null;
+        super.onDestroyView();
+    }
 }

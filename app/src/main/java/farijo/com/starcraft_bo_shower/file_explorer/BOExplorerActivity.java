@@ -28,6 +28,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -38,6 +39,17 @@ import static farijo.com.starcraft_bo_shower.file_explorer.ExplorerLevelFragment
 
 public class BOExplorerActivity extends AppCompatActivity {
 
+    static class Triad<F, S, T> {
+        final F first;
+        final S second;
+        final T third;
+        Triad(F f, S s, T t) {
+            first = f;
+            second = s;
+            third = t;
+        }
+    }
+
     static final String ROOT_NAME = "public";
 
     VirtualFile fileSystem;
@@ -45,7 +57,7 @@ public class BOExplorerActivity extends AppCompatActivity {
     private boolean destroyed = false;
     String toStart = null;
 
-    final ConcurrentLinkedQueue<String> filesToDownload = new ConcurrentLinkedQueue<>();
+    final ConcurrentLinkedQueue<Triad<VirtualFile, String, Short>> filesToDownload = new ConcurrentLinkedQueue<>();
 
     private Thread socketIniter;
     private boolean downloaderStarted = false;
@@ -53,6 +65,8 @@ public class BOExplorerActivity extends AppCompatActivity {
 
     private List<ExplorerLevelFragment> fragmentsList = new ArrayList<>();
     private LinearLayout fragPath;
+
+    HashMap<Short, BOFileAdapter> activeAdapters = new HashMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -88,7 +102,9 @@ public class BOExplorerActivity extends AppCompatActivity {
                             }
                             filesToDownload.wait();
                         }
-                        final String path = filesToDownload.poll();
+                        final Triad<VirtualFile, String, Short> fileData = filesToDownload.poll();
+                        updateDownloadState(fileData.third, fileData.first, DownloadingState.STARTING);
+                        final String path = fileData.second;
                         final File file = new File(new File(getFilesDir(), "files"), path);
                         socket.getOutputStream().write(ByteBuffer.wrap((path + '\n').getBytes()).array());
                         byte[] filebytes = putSizeByteIntoBuffer(socket.getInputStream());
@@ -99,18 +115,19 @@ public class BOExplorerActivity extends AppCompatActivity {
                             fileOutputStream.write(filebytes);
                             fileOutputStream.close();
                             file.setLastModified(readDate(socket.getInputStream()));
-                        }
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(getBaseContext(), file.getName() + " downloaded", Toast.LENGTH_SHORT).show();
+                            Thread.sleep(1600);
+                            updateDownloadState(fileData.third, fileData.first, DownloadingState.ENDING_OK);
+                            if (path.equals(toStart)) {
+                                toStart = null;
+                                Intent intent = new Intent(BOExplorerActivity.this, BOActivity.class);
+                                intent.putExtra(BOActivity.BO_EXTRA, file.getAbsolutePath());
+                                startActivity(intent);
                             }
-                        });
-                        if (path.equals(toStart)) {
-                            toStart = null;
-                            Intent intent = new Intent(BOExplorerActivity.this, BOActivity.class);
-                            intent.putExtra(BOActivity.BO_EXTRA, file.getAbsolutePath());
-                            startActivity(intent);
+                        } else {
+                            if (path.equals(toStart)) {
+                                toStart = null;
+                            }
+                            updateDownloadState(fileData.third, fileData.first, DownloadingState.ENDING_EMPTY);
                         }
                     }
                 } catch (InterruptedException | IOException e) {
@@ -121,13 +138,38 @@ public class BOExplorerActivity extends AppCompatActivity {
         }.start();
     }
 
+    private enum DownloadingState{ STARTING, ENDING_OK, ENDING_EMPTY }
+    private void updateDownloadState(final short adapterId, final VirtualFile virtualFile, final DownloadingState state) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                switch (state) {
+                    case STARTING:
+                        virtualFile.startDownload();
+                        break;
+                    case ENDING_OK:
+                        virtualFile.endDownload();
+                        Toast.makeText(getBaseContext(), virtualFile.fileName + " downloaded", Toast.LENGTH_SHORT).show();
+                        break;
+                    case ENDING_EMPTY:
+                        virtualFile.endDownloadEmpty();
+                        Toast.makeText(getBaseContext(), virtualFile.fileName + " is empty", Toast.LENGTH_SHORT).show();
+                        break;
+                }
+                if(activeAdapters.containsKey(adapterId)) {
+                    activeAdapters.get(adapterId).notifyChanged(virtualFile);
+                }
+            }
+        });
+    }
+
     private void showIpPortDialog() {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.server_chooser, null);
         final EditText ipServer = dialogView.findViewById(R.id.ip_server);
         final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
         portServer.setMaxValue(65535);
         ipServer.setInputType(InputType.TYPE_CLASS_NUMBER);
-        ipServer.setText("192.168.1.40");
+        ipServer.setText("192.168.1.42");
         portServer.setValue(4040);
         new AlertDialog.Builder(this)
                 .setTitle("IP & port")
