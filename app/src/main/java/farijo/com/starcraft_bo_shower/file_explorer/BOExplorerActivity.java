@@ -3,6 +3,7 @@ package farijo.com.starcraft_bo_shower.file_explorer;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -18,10 +19,12 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.nio.ByteBuffer;
@@ -87,6 +90,8 @@ public class BOExplorerActivity extends AppCompatActivity {
 
         showIpPortDialog();
 
+        final File localRootFolder = new File(getFilesDir(), "files");
+
         new Thread() {
             @Override
             public void run() {
@@ -103,20 +108,25 @@ public class BOExplorerActivity extends AppCompatActivity {
                             filesToDownload.wait();
                         }
                         final Triad<VirtualFile, String, Short> fileData = filesToDownload.poll();
-                        updateDownloadState(fileData.third, fileData.first, DownloadingState.STARTING);
+                        updateDownloadState(DownloadingState.STARTING, fileData.third, fileData.first);
+                        final long startTime = SystemClock.currentThreadTimeMillis();
                         final String path = fileData.second;
-                        final File file = new File(new File(getFilesDir(), "files"), path);
-                        socket.getOutputStream().write(ByteBuffer.wrap((path + '\n').getBytes()).array());
-                        byte[] filebytes = putSizeByteIntoBuffer(socket.getInputStream());
+                        final File file = new File(localRootFolder, path);
+                        sendFilename(socket.getOutputStream(), path);
+                        BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
+                        byte[] filebytes = putSizeByteIntoBuffer(inputStream);
                         if(filebytes != null) {
                             file.getParentFile().mkdirs();
                             file.createNewFile();
                             FileOutputStream fileOutputStream = new FileOutputStream(file);
                             fileOutputStream.write(filebytes);
                             fileOutputStream.close();
-                            file.setLastModified(readDate(socket.getInputStream()));
-                            Thread.sleep(1600);
-                            updateDownloadState(fileData.third, fileData.first, DownloadingState.ENDING_OK);
+                            file.setLastModified(readDate(inputStream));
+                            final long restingTime = 800 - (SystemClock.currentThreadTimeMillis() - startTime);
+                            if(restingTime > 0){
+                                sleep(restingTime);
+                            }
+                            updateDownloadState(DownloadingState.ENDING_OK, fileData.third, fileData.first);
                             if (path.equals(toStart)) {
                                 toStart = null;
                                 Intent intent = new Intent(BOExplorerActivity.this, BOActivity.class);
@@ -127,7 +137,7 @@ public class BOExplorerActivity extends AppCompatActivity {
                             if (path.equals(toStart)) {
                                 toStart = null;
                             }
-                            updateDownloadState(fileData.third, fileData.first, DownloadingState.ENDING_EMPTY);
+                            updateDownloadState(DownloadingState.ENDING_EMPTY, fileData.third, fileData.first);
                         }
                     }
                 } catch (InterruptedException | IOException e) {
@@ -139,7 +149,7 @@ public class BOExplorerActivity extends AppCompatActivity {
     }
 
     private enum DownloadingState{ STARTING, ENDING_OK, ENDING_EMPTY }
-    private void updateDownloadState(final short adapterId, final VirtualFile virtualFile, final DownloadingState state) {
+    private void updateDownloadState(final DownloadingState state, final short adapterId, final VirtualFile virtualFile) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -194,11 +204,12 @@ public class BOExplorerActivity extends AppCompatActivity {
                     List<String> fileList = new ArrayList<>();
                     List<Long> fileUpdateTime = new ArrayList<>();
                     String data;
+                    BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
                     do {
-                        data = receiveSizeByteIntoString(socket.getInputStream());
+                        data = receiveSizeByteIntoString(inputStream);
                         if (data != null) {
                             fileList.add(data);
-                            fileUpdateTime.add(readDate(socket.getInputStream()));
+                            fileUpdateTime.add(readDate(inputStream));
                         }
                     } while (data != null);
                     fileSystem.loadVirtualFilesFromStrings(
@@ -290,6 +301,10 @@ public class BOExplorerActivity extends AppCompatActivity {
         transaction.commit();
     }
 
+    public static void sendFilename(OutputStream outputStream, String path) throws IOException {
+        outputStream.write(ByteBuffer.wrap((path + '\n').getBytes()).array());
+    }
+
     public static byte[] putSizeByteIntoBuffer(InputStream inputStream) throws IOException {
         int size = readShort(inputStream);
         if (size <= 0) {
@@ -322,6 +337,7 @@ public class BOExplorerActivity extends AppCompatActivity {
         byte[] data = new byte[12];
         inputStream.read(data);
         Calendar calendar = Calendar.getInstance();
+        final long NOW = calendar.getTimeInMillis();
         calendar.setTimeInMillis(0);
         ByteBuffer buffer = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
         calendar.set(Calendar.YEAR, buffer.getShort(0));
@@ -330,6 +346,9 @@ public class BOExplorerActivity extends AppCompatActivity {
         calendar.set(Calendar.HOUR_OF_DAY, buffer.getShort(6));
         calendar.set(Calendar.MINUTE, buffer.getShort(8));
         calendar.set(Calendar.SECOND, buffer.getShort(10));
+        if(calendar.getTimeInMillis() > NOW) {
+            return NOW;
+        }
         return calendar.getTimeInMillis();
     }
 }

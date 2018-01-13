@@ -56,10 +56,11 @@ class VirtualFile {
     VirtualFile put(VirtualFile vf) {
         setFolder();
         if(containsKey(vf.fileName)) {
+            VirtualFile existingSon = get(vf.fileName);
             for (VirtualFile virtualFile : vf.subFiles.values()) {
-                get(vf.fileName).put(virtualFile);
+                existingSon.put(virtualFile);
             }
-            return get(vf.fileName);
+            return existingSon;
         } else {
             return subFiles.put(vf.fileName, vf);
         }
