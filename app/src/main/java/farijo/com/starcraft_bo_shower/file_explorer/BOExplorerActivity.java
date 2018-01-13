@@ -167,7 +167,7 @@ public class BOExplorerActivity extends AppCompatActivity {
         View dialogView = LayoutInflater.from(this).inflate(R.layout.server_chooser, null);
         final EditText ipServer = dialogView.findViewById(R.id.ip_server);
         final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
-        portServer.setMaxValue(65535);
+        portServer.setMaxValue(Short.MAX_VALUE - Short.MIN_VALUE);
         ipServer.setInputType(InputType.TYPE_CLASS_NUMBER);
         ipServer.setText("192.168.1.42");
         portServer.setValue(4040);
