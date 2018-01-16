@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="@dimen/height"
     android:layout_marginLeft="5dp"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:layout_marginStart="5dp">
 
     <FrameLayout
         android:id="@+id/mark"
@@ -28,9 +28,9 @@
 
         <ImageView
             android:id="@+id/onfinish_flag"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
-            android:layout_gravity="top|right"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="top|end"
             android:scaleX="-1"
             android:src="@drawable/finish_flag"
             android:visibility="gone" />
@@ -45,7 +45,8 @@
         android:layout_margin="5dp"
         android:layout_toRightOf="@+id/mark"
         android:textSize="18sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:layout_toEndOf="@+id/mark" />
 
     <FrameLayout
         android:id="@+id/icon_container"
@@ -53,7 +54,8 @@
         android:layout_height="60dp"
         android:layout_centerVertical="true"
         android:layout_margin="5dp"
-        android:layout_toRightOf="@+id/time">
+        android:layout_toRightOf="@+id/time"
+        android:layout_toEndOf="@+id/time">
 
         <ImageView
             android:id="@+id/icon"
@@ -64,7 +66,7 @@
             android:id="@+id/count"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|right"
+            android:layout_gravity="top|end"
             android:textSize="18sp"
             android:textStyle="bold" />
 
@@ -76,7 +78,9 @@
         android:layout_alignParentRight="true"
         android:layout_margin="5dp"
         android:layout_toRightOf="@+id/icon_container"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:layout_alignParentEnd="true"
+        android:layout_toEndOf="@+id/icon_container">
 
         <TextView
             android:id="@+id/name"

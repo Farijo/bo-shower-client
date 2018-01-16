@@ -21,6 +21,8 @@ import java.util.NoSuchElementException;
 
 import farijo.com.starcraft_bo_shower.R;
 
+import static farijo.com.starcraft_bo_shower.player.SC2Action.NO_TIMING;
+
 public class BOActivity extends AppCompatActivity {
 
     public static final String BO_EXTRA = "BO";
@@ -52,6 +54,8 @@ public class BOActivity extends AppCompatActivity {
 
         final BuildOrderAdapter adapter = new BuildOrderAdapter();
 
+        boolean loadEnabled = true;
+
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             factory.setNamespaceAware(true);
@@ -70,6 +74,10 @@ public class BOActivity extends AppCompatActivity {
                     case XmlPullParser.START_TAG:
                         switch (parser.getName()) {
                             case "action":
+                                if(currentAction != null && currentAction.timing == NO_TIMING) {
+                                    loadEnabled = false;
+                                    adapter.disableTimings();
+                                }
                                 adapter.add(currentAction);
                                 currentAction = new SC2Action();
                                 break;
@@ -105,7 +113,7 @@ public class BOActivity extends AppCompatActivity {
                             case "time":
                                 currentAction.strTiming = value;
                                 currentAction.timing = Integer.parseInt(value.substring(0, value.indexOf(':'))) * 60 + Integer.parseInt(value.substring(value.indexOf(':') + 1));
-                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming));
+                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming) / 10);
                                 previousTiming = currentAction.timing;
                                 break;
                             case "prod":
@@ -129,27 +137,31 @@ public class BOActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
         recycler.setAdapter(adapter);
 
-        findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    adapter.startTimer(
-                            findViewById(R.id.timer),
-                            (NestedScrollView) findViewById(R.id.root_scroll),
-                            (CheckBox) findViewById(R.id.autoscroll_selector),
-                            BOActivity.this);
-                } catch (NoSuchElementException e) {
-                    finish();
-                    return;
+        if(loadEnabled) {
+            findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        adapter.startTimer(
+                                findViewById(R.id.timer),
+                                (NestedScrollView) findViewById(R.id.root_scroll),
+                                (CheckBox) findViewById(R.id.autoscroll_selector),
+                                BOActivity.this);
+                    } catch (NoSuchElementException e) {
+                        finish();
+                        return;
+                    }
+                    TextView textView = ((TextView) v);
+                    if (textView.getText().equals("Start")) {
+                        textView.setText("Stop");
+                    } else {
+                        textView.setText("Start");
+                    }
                 }
-                TextView textView = ((TextView) v);
-                if (textView.getText().equals("Start")) {
-                    textView.setText("Stop");
-                } else {
-                    textView.setText("Start");
-                }
-            }
-        });
+            });
+        } else {
+            findViewById(R.id.start_button).setEnabled(false);
+        }
     }
 
     @Override

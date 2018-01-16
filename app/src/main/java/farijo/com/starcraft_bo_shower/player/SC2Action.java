@@ -57,11 +57,13 @@ public class SC2Action {
         }
     }
 
+    public static final int NO_TIMING = -1;
+
     String population;
     String strTiming;
     int onFinish = -1;
     long deltaTiming;
-    int timing;
+    int timing = NO_TIMING;
     String name;
     int ressourceIcon;
     int count = 1;
