@@ -168,8 +168,8 @@ public class BOExplorerActivity extends AppCompatActivity {
         final EditText ipServer = dialogView.findViewById(R.id.ip_server);
         final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
         portServer.setMaxValue(Short.MAX_VALUE - Short.MIN_VALUE);
-        ipServer.setInputType(InputType.TYPE_CLASS_NUMBER);
-        ipServer.setText("192.168.1.42");
+        ipServer.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_CLASS_TEXT);
+        ipServer.setText("192.168.0.13");
         portServer.setValue(4040);
         new AlertDialog.Builder(this)
                 .setTitle("IP & port")
@@ -190,7 +190,7 @@ public class BOExplorerActivity extends AppCompatActivity {
             public void run() {
                 try {
                     socket = new Socket();
-                    socket.connect(new InetSocketAddress(ip, port), 10000);
+                    socket.connect(new InetSocketAddress(ip, port), 6000);
                     List<String> fileList = new ArrayList<>();
                     List<Long> fileUpdateTime = new ArrayList<>();
                     String data;
