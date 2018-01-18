@@ -82,14 +82,21 @@
         <LinearLayout
             android:id="@+id/option_panel"
             android:layout_width="match_parent"
-            android:layout_height="0dp">
-
+            android:layout_height="0dp"
+            android:orientation="vertical">
 
             <CheckBox
                 android:id="@+id/autoscroll_selector"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="auto scroll" />
+                android:text="Défilement automatique" />
+
+            <CheckBox
+                android:id="@+id/show_timer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Afficher les temps" />
         </LinearLayout>
 
     </LinearLayout>

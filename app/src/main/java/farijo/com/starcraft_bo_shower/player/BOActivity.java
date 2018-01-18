@@ -7,6 +7,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -54,7 +55,7 @@ public class BOActivity extends AppCompatActivity {
 
         final BuildOrderAdapter adapter = new BuildOrderAdapter();
 
-        boolean loadEnabled = true;
+        boolean playEnabled = true;
 
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -75,7 +76,7 @@ public class BOActivity extends AppCompatActivity {
                         switch (parser.getName()) {
                             case "action":
                                 if(currentAction != null && currentAction.timing == NO_TIMING) {
-                                    loadEnabled = false;
+                                    playEnabled = false;
                                     adapter.disableTimings();
                                 }
                                 adapter.add(currentAction);
@@ -137,7 +138,10 @@ public class BOActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
         recycler.setAdapter(adapter);
 
-        if(loadEnabled) {
+        final CheckBox showTimerBox = findViewById(R.id.show_timer);
+        final CheckBox autoScroll = findViewById(R.id.autoscroll_selector);
+
+        if(playEnabled) {
             findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -145,7 +149,7 @@ public class BOActivity extends AppCompatActivity {
                         adapter.startTimer(
                                 findViewById(R.id.timer),
                                 (NestedScrollView) findViewById(R.id.root_scroll),
-                                (CheckBox) findViewById(R.id.autoscroll_selector),
+                                autoScroll,
                                 BOActivity.this);
                     } catch (NoSuchElementException e) {
                         finish();
@@ -159,8 +163,19 @@ public class BOActivity extends AppCompatActivity {
                     }
                 }
             });
+
+            showTimerBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    adapter.showTimers(b);
+                }
+            });
         } else {
             findViewById(R.id.start_button).setEnabled(false);
+            autoScroll.setChecked(false);
+            autoScroll.setEnabled(false);
+            showTimerBox.setChecked(false);
+            showTimerBox.setEnabled(false);
         }
     }
 
