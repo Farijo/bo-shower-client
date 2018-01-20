@@ -1,14 +1,19 @@
 package farijo.com.starcraft_bo_shower.player;
 
+import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -30,6 +35,9 @@ public class BOActivity extends AppCompatActivity {
 
     public Progresser currentProgress;
 
+    private boolean optionOpen = true;
+    private ValueAnimator currentAnim;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -39,17 +47,36 @@ public class BOActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.bo_title)).setText(file.getName());
         final View optionPan = findViewById(R.id.option_panel);
+        final RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) optionPan.getLayoutParams();
+        final ValueAnimator enter = new ValueAnimator();
+        final ValueAnimator exit = new ValueAnimator();
+        ValueAnimator.AnimatorUpdateListener optionPanTranslation = new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                params.topMargin = (int)(float)valueAnimator.getAnimatedValue();
+                optionPan.requestLayout();
+            }
+        };
+        enter.addUpdateListener(optionPanTranslation);
+        exit.addUpdateListener(optionPanTranslation);
         final ImageView optionArrow = findViewById(R.id.arrow);
         findViewById(R.id.title_panel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                optionPan.getLayoutParams().height = -2 - optionPan.getLayoutParams().height;
-                optionPan.requestLayout();
-                if (optionPan.getLayoutParams().height == 0) {
-                    optionArrow.setImageResource(R.drawable.arrow_right);
-                } else {
-                    optionArrow.setImageResource(R.drawable.arrow_bottom);
+                optionOpen = !optionOpen;
+                if(currentAnim != null) {
+                    currentAnim.cancel();
                 }
+                if (optionOpen) {
+                    enter.setFloatValues(params.topMargin, 0);
+                    currentAnim = enter;
+                    optionArrow.setImageResource(R.drawable.arrow_bottom);
+                } else {
+                    exit.setFloatValues(params.topMargin, -optionPan.getHeight());
+                    currentAnim = exit;
+                    optionArrow.setImageResource(R.drawable.arrow_right);
+                }
+                currentAnim.start();
             }
         });
 
