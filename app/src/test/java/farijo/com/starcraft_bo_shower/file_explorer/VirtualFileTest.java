@@ -75,7 +75,9 @@ public class VirtualFileTest {
                 "coucou/oui/non/y/pasfichier/fichier",
         };
 
-        virtualFile.loadVirtualFilesFromStrings(paths);
+        Long[] timers = new Long[] { 0L, 0L, 0L, 0L, 0L, 0L, 0L };
+
+        virtualFile.loadVirtualFilesFromStrings(paths, timers);
 
         assertFalse(virtualFile.get("coucou").isFile());
         assertFalse(virtualFile.get("coucou").get("oui").isFile());

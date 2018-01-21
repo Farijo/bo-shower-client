@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
@@ -8,7 +8,7 @@
         android:id="@+id/root_scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="40dp"
+        android:layout_below="@+id/option_panel"
         android:keepScreenOn="true">
 
         <RelativeLayout
@@ -36,63 +36,64 @@
     </android.support.v4.widget.NestedScrollView>
 
     <LinearLayout
+        android:id="@+id/option_panel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?android:attr/colorBackground"
+        android:layout_below="@+id/title_panel"
+        android:background="#441121"
         android:orientation="vertical">
 
-        <RelativeLayout
-            android:id="@+id/title_panel"
-            android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:clickable="true">
+        <CheckBox
+            android:id="@+id/autoscroll_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Défilement automatique" />
 
-            <ImageView
-                android:id="@+id/arrow"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:layout_centerVertical="true"
-                android:padding="8dp"
-                android:tint="@android:color/white"
-                app:srcCompat="@drawable/arrow_right" />
-
-            <TextView
-                android:id="@+id/bo_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerVertical="true"
-                android:layout_toEndOf="@+id/arrow"
-                android:layout_toLeftOf="@+id/start_button"
-                android:layout_toRightOf="@+id/arrow"
-                android:layout_toStartOf="@+id/start_button" />
-
-            <TextView
-                android:id="@+id/start_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:padding="10dp"
-                android:text="Start"
-                android:textStyle="bold" />
-
-        </RelativeLayout>
-
-        <LinearLayout
-            android:id="@+id/option_panel"
-            android:layout_width="match_parent"
-            android:layout_height="0dp">
-
-
-            <CheckBox
-                android:id="@+id/autoscroll_selector"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="auto scroll" />
-        </LinearLayout>
-
+        <CheckBox
+            android:id="@+id/show_timer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="Afficher les temps" />
     </LinearLayout>
-</FrameLayout>
+
+    <RelativeLayout
+        android:id="@+id/title_panel"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:background="#542131"
+        android:clickable="true">
+
+        <ImageView
+            android:id="@+id/arrow"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_centerVertical="true"
+            android:padding="8dp"
+            android:tint="@android:color/white"
+            app:srcCompat="@drawable/arrow_right" />
+
+        <TextView
+            android:id="@+id/bo_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toEndOf="@+id/arrow"
+            android:layout_toLeftOf="@+id/start_button"
+            android:layout_toRightOf="@+id/arrow"
+            android:layout_toStartOf="@+id/start_button" />
+
+        <TextView
+            android:id="@+id/start_button"
+            style="@style/Widget.AppCompat.Button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:minWidth="0dp"
+            android:text="Start" />
+
+    </RelativeLayout>
+
+</RelativeLayout>

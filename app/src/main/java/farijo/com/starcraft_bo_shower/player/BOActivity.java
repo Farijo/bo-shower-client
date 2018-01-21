@@ -1,13 +1,19 @@
 package farijo.com.starcraft_bo_shower.player;
 
+import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -21,11 +27,16 @@ import java.util.NoSuchElementException;
 
 import farijo.com.starcraft_bo_shower.R;
 
+import static farijo.com.starcraft_bo_shower.player.SC2Action.NO_TIMING;
+
 public class BOActivity extends AppCompatActivity {
 
     public static final String BO_EXTRA = "BO";
 
     public Progresser currentProgress;
+
+    private boolean optionOpen = true;
+    private ValueAnimator currentAnim;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,21 +47,42 @@ public class BOActivity extends AppCompatActivity {
 
         ((TextView) findViewById(R.id.bo_title)).setText(file.getName());
         final View optionPan = findViewById(R.id.option_panel);
+        final RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) optionPan.getLayoutParams();
+        final ValueAnimator enter = new ValueAnimator();
+        final ValueAnimator exit = new ValueAnimator();
+        ValueAnimator.AnimatorUpdateListener optionPanTranslation = new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                params.topMargin = (int)(float)valueAnimator.getAnimatedValue();
+                optionPan.requestLayout();
+            }
+        };
+        enter.addUpdateListener(optionPanTranslation);
+        exit.addUpdateListener(optionPanTranslation);
         final ImageView optionArrow = findViewById(R.id.arrow);
         findViewById(R.id.title_panel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                optionPan.getLayoutParams().height = -2 - optionPan.getLayoutParams().height;
-                optionPan.requestLayout();
-                if (optionPan.getLayoutParams().height == 0) {
-                    optionArrow.setImageResource(R.drawable.arrow_right);
-                } else {
-                    optionArrow.setImageResource(R.drawable.arrow_bottom);
+                optionOpen = !optionOpen;
+                if(currentAnim != null) {
+                    currentAnim.cancel();
                 }
+                if (optionOpen) {
+                    enter.setFloatValues(params.topMargin, 0);
+                    currentAnim = enter;
+                    optionArrow.setImageResource(R.drawable.arrow_bottom);
+                } else {
+                    exit.setFloatValues(params.topMargin, -optionPan.getHeight());
+                    currentAnim = exit;
+                    optionArrow.setImageResource(R.drawable.arrow_right);
+                }
+                currentAnim.start();
             }
         });
 
         final BuildOrderAdapter adapter = new BuildOrderAdapter();
+
+        boolean playEnabled = true;
 
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -70,6 +102,10 @@ public class BOActivity extends AppCompatActivity {
                     case XmlPullParser.START_TAG:
                         switch (parser.getName()) {
                             case "action":
+                                if(currentAction != null && currentAction.timing == NO_TIMING) {
+                                    playEnabled = false;
+                                    adapter.disableTimings();
+                                }
                                 adapter.add(currentAction);
                                 currentAction = new SC2Action();
                                 break;
@@ -105,7 +141,7 @@ public class BOActivity extends AppCompatActivity {
                             case "time":
                                 currentAction.strTiming = value;
                                 currentAction.timing = Integer.parseInt(value.substring(0, value.indexOf(':'))) * 60 + Integer.parseInt(value.substring(value.indexOf(':') + 1));
-                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming));
+                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming) / 10);
                                 previousTiming = currentAction.timing;
                                 break;
                             case "prod":
@@ -129,27 +165,45 @@ public class BOActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
         recycler.setAdapter(adapter);
 
-        findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    adapter.startTimer(
-                            findViewById(R.id.timer),
-                            (NestedScrollView) findViewById(R.id.root_scroll),
-                            (CheckBox) findViewById(R.id.autoscroll_selector),
-                            BOActivity.this);
-                } catch (NoSuchElementException e) {
-                    finish();
-                    return;
+        final CheckBox showTimerBox = findViewById(R.id.show_timer);
+        final CheckBox autoScroll = findViewById(R.id.autoscroll_selector);
+
+        if(playEnabled) {
+            findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        adapter.startTimer(
+                                findViewById(R.id.timer),
+                                (NestedScrollView) findViewById(R.id.root_scroll),
+                                autoScroll,
+                                BOActivity.this);
+                    } catch (NoSuchElementException e) {
+                        finish();
+                        return;
+                    }
+                    TextView textView = ((TextView) v);
+                    if (textView.getText().equals("Start")) {
+                        textView.setText("Stop");
+                    } else {
+                        textView.setText("Start");
+                    }
                 }
-                TextView textView = ((TextView) v);
-                if (textView.getText().equals("Start")) {
-                    textView.setText("Stop");
-                } else {
-                    textView.setText("Start");
+            });
+
+            showTimerBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                    adapter.showTimers(b);
                 }
-            }
-        });
+            });
+        } else {
+            findViewById(R.id.start_button).setEnabled(false);
+            autoScroll.setChecked(false);
+            autoScroll.setEnabled(false);
+            showTimerBox.setChecked(false);
+            showTimerBox.setEnabled(false);
+        }
     }
 
     @Override

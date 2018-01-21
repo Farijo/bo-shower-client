@@ -25,6 +25,12 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
 
     private List<SC2Action> actions = new ArrayList<>();
     private boolean started = false;
+    private boolean timingsOk = true;
+    private boolean showTimer = true;
+
+    public void disableTimings() {
+        timingsOk = false;
+    }
 
     public void add(SC2Action a) {
         if(a == null) {
@@ -32,6 +38,13 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         }
         actions.add(a);
         notifyItemInserted(actions.size()-1);
+    }
+
+    public void showTimers(boolean show) {
+        if(show != showTimer) {
+            showTimer = show;
+            notifyItemRangeChanged(0, actions.size());
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
@@ -50,14 +63,14 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
 
         ViewHolder(View itemView, int viewType) {
             super(itemView);
-            pop = ((TextView) itemView.findViewById(R.id.pop));
-            onFinishAction = ((ImageView) itemView.findViewById(R.id.onfinish_icon));
-            finishFlag =  itemView.findViewById(R.id.onfinish_flag);
-            time = ((TextView) itemView.findViewById(R.id.time));
-            icon = ((ImageView) itemView.findViewById(R.id.icon));
-            count =  ((TextView) itemView.findViewById(R.id.count));
-            name = ((TextView) itemView.findViewById(R.id.name));
-            details = ((TextView) itemView.findViewById(R.id.details));
+            pop = itemView.findViewById(R.id.pop);
+            onFinishAction = itemView.findViewById(R.id.onfinish_icon);
+            finishFlag = itemView.findViewById(R.id.onfinish_flag);
+            time = itemView.findViewById(R.id.time);
+            icon = itemView.findViewById(R.id.icon);
+            count = itemView.findViewById(R.id.count);
+            name = itemView.findViewById(R.id.name);
+            details = itemView.findViewById(R.id.details);
 
             if(viewType == 0) {
                 itemView.setBackgroundColor(LIGHT);
@@ -87,7 +100,12 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
             holder.finishFlag.setVisibility(View.VISIBLE);
             holder.onFinishAction.setImageResource(actions.get(act.onFinish).ressourceIcon);
         }
-        holder.time.setText(act.strTiming);
+        if(timingsOk && showTimer) {
+            holder.time.setText(act.strTiming);
+            holder.time.setVisibility(View.VISIBLE);
+        } else {
+            holder.time.setVisibility(View.GONE);
+        }
         holder.icon.setImageResource(act.ressourceIcon);
         if(act.count > 1) {
             holder.count.setText(String.valueOf(act.count));
