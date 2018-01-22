@@ -28,6 +28,7 @@
         android:layout_marginStart="20dp"
         android:layout_toEndOf="@+id/name"
         android:layout_toRightOf="@+id/name"
-        android:indeterminateOnly="true" />
+        android:indeterminateOnly="true"
+        android:minWidth="200dp" />
 
 </RelativeLayout>
