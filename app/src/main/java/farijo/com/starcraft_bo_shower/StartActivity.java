@@ -25,7 +25,7 @@ public class StartActivity extends AppCompatActivity {
             }
         });
 
-        RecyclerView recycler = ((RecyclerView) findViewById(R.id.liste));
+        RecyclerView recycler = findViewById(R.id.liste);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         BuildListAdapter adapter = new BuildListAdapter(this);
         recycler.setAdapter(adapter);

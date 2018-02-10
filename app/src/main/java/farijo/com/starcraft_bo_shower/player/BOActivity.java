@@ -2,14 +2,12 @@ package farijo.com.starcraft_bo_shower.player;
 
 import android.animation.ValueAnimator;
 import android.os.Bundle;
+import android.support.annotation.IdRes;
 import android.support.v4.widget.NestedScrollView;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
@@ -45,40 +43,10 @@ public class BOActivity extends AppCompatActivity {
 
         File file = new File(getIntent().getStringExtra(BO_EXTRA));
 
-        ((TextView) findViewById(R.id.bo_title)).setText(file.getName());
-        final View optionPan = findViewById(R.id.option_panel);
-        final RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) optionPan.getLayoutParams();
-        final ValueAnimator enter = new ValueAnimator();
-        final ValueAnimator exit = new ValueAnimator();
-        ValueAnimator.AnimatorUpdateListener optionPanTranslation = new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator valueAnimator) {
-                params.topMargin = (int)(float)valueAnimator.getAnimatedValue();
-                optionPan.requestLayout();
-            }
-        };
-        enter.addUpdateListener(optionPanTranslation);
-        exit.addUpdateListener(optionPanTranslation);
-        final ImageView optionArrow = findViewById(R.id.arrow);
-        findViewById(R.id.title_panel).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                optionOpen = !optionOpen;
-                if(currentAnim != null) {
-                    currentAnim.cancel();
-                }
-                if (optionOpen) {
-                    enter.setFloatValues(params.topMargin, 0);
-                    currentAnim = enter;
-                    optionArrow.setImageResource(R.drawable.arrow_bottom);
-                } else {
-                    exit.setFloatValues(params.topMargin, -optionPan.getHeight());
-                    currentAnim = exit;
-                    optionArrow.setImageResource(R.drawable.arrow_right);
-                }
-                currentAnim.start();
-            }
-        });
+        TextView title = findViewById(R.id.bo_title);
+        title.setText(removeFileExtensions(file.getName()));
+
+        bindOptionPanelAnimation(R.id.title_panel, R.id.arrow, R.id.option_panel);
 
         final BuildOrderAdapter adapter = new BuildOrderAdapter();
 
@@ -102,7 +70,7 @@ public class BOActivity extends AppCompatActivity {
                     case XmlPullParser.START_TAG:
                         switch (parser.getName()) {
                             case "action":
-                                if(currentAction != null && currentAction.timing == NO_TIMING) {
+                                if (currentAction != null && currentAction.timing == NO_TIMING) {
                                     playEnabled = false;
                                     adapter.disableTimings();
                                 }
@@ -165,52 +133,103 @@ public class BOActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
         recycler.setAdapter(adapter);
 
-        final CheckBox showTimerBox = findViewById(R.id.show_timer);
-        final CheckBox autoScroll = findViewById(R.id.autoscroll_selector);
-
-        if(playEnabled) {
-            findViewById(R.id.start_button).setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    try {
-                        adapter.startTimer(
-                                findViewById(R.id.timer),
-                                (NestedScrollView) findViewById(R.id.root_scroll),
-                                autoScroll,
-                                BOActivity.this);
-                    } catch (NoSuchElementException e) {
-                        finish();
-                        return;
-                    }
-                    TextView textView = ((TextView) v);
-                    if (textView.getText().equals("Start")) {
-                        textView.setText("Stop");
-                    } else {
-                        textView.setText("Start");
-                    }
-                }
-            });
-
-            showTimerBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    adapter.showTimers(b);
-                }
-            });
-        } else {
-            findViewById(R.id.start_button).setEnabled(false);
-            autoScroll.setChecked(false);
-            autoScroll.setEnabled(false);
-            showTimerBox.setChecked(false);
-            showTimerBox.setEnabled(false);
-        }
+        bindOptionScrolling(R.id.start_button, R.id.autoscroll_selector, adapter, playEnabled);
+        bindOptionShowTimer(R.id.show_timer, adapter, playEnabled);
     }
 
     @Override
     protected void onDestroy() {
-        if(currentProgress != null) {
+        if (currentProgress != null) {
             currentProgress.cancel();
         }
         super.onDestroy();
+    }
+
+    private static String removeFileExtensions(String fileName) {
+        return fileName.substring(0, fileName.indexOf('.'));
+    }
+
+    private void bindOptionPanelAnimation(@IdRes int titleViewId, @IdRes int tabImg, @IdRes int optViewId) {
+        final View titleView = findViewById(titleViewId);
+        final ImageView stateTabIndicator = findViewById(tabImg);
+        final View optionView = findViewById(optViewId);
+
+        final RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) optionView.getLayoutParams();
+        ValueAnimator.AnimatorUpdateListener optionPanTranslation = new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                params.topMargin = (int) (float) valueAnimator.getAnimatedValue();
+                optionView.requestLayout();
+            }
+        };
+
+        final ValueAnimator enter = new ValueAnimator();
+        final ValueAnimator exit = new ValueAnimator();
+        enter.addUpdateListener(optionPanTranslation);
+        exit.addUpdateListener(optionPanTranslation);
+
+        titleView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                optionOpen = !optionOpen;
+                if (currentAnim != null) {
+                    currentAnim.cancel();
+                }
+                if (optionOpen) {
+                    enter.setFloatValues(params.topMargin, 0);
+                    currentAnim = enter;
+                    stateTabIndicator.setImageResource(R.drawable.arrow_bottom);
+                } else {
+                    exit.setFloatValues(params.topMargin, -optionView.getHeight());
+                    currentAnim = exit;
+                    stateTabIndicator.setImageResource(R.drawable.arrow_right);
+                }
+                currentAnim.start();
+            }
+        });
+    }
+
+    private void bindOptionScrolling(@IdRes int btnStart, @IdRes int cbAutoScroll,
+                                     final BuildOrderAdapter adapter, final boolean playEnabled) {
+        final CheckBox autoScroll = findViewById(cbAutoScroll);
+        final View startBtn = findViewById(btnStart);
+
+        startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    adapter.startTimer(
+                            findViewById(R.id.timer),
+                            (NestedScrollView) findViewById(R.id.root_scroll),
+                            autoScroll,
+                            BOActivity.this);
+                } catch (NoSuchElementException e) {
+                    finish();
+                    return;
+                }
+                TextView textView = ((TextView) v);
+                if (textView.getText().equals("Start")) {
+                    textView.setText("Stop");
+                } else {
+                    textView.setText("Start");
+                }
+            }
+        });
+        startBtn.setEnabled(playEnabled);
+        autoScroll.setChecked(playEnabled);
+        autoScroll.setEnabled(playEnabled);
+    }
+
+    private void bindOptionShowTimer(@IdRes int cbShowTimer, final BuildOrderAdapter adapter, final boolean playEnabled) {
+        final CheckBox showTimerBox = findViewById(cbShowTimer);
+
+        showTimerBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                adapter.showTimers(b);
+            }
+        });
+        showTimerBox.setChecked(playEnabled);
+        showTimerBox.setEnabled(playEnabled);
     }
 }

@@ -120,7 +120,7 @@ class VirtualFile {
         return loadVirtualFilesLocals(context, null);
     }
 
-    static VirtualFile loadVirtualFilesLocals(Context context, VirtualFile res) {
+    private static VirtualFile loadVirtualFilesLocals(Context context, VirtualFile res) {
         if(res == null) {
             res = new VirtualFile(".root", false);
         }

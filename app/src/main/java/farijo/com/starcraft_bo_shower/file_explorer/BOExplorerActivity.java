@@ -98,15 +98,9 @@ public class BOExplorerActivity extends AppCompatActivity {
                 downloaderStarted = true;
                 try {
                     synchronized (filesToDownload) {
-                        while (filesToDownload.isEmpty()) {
-                            if (destroyed) {
-                                if (socket != null) {
-                                    socket.close();
-                                }
-                                return;
-                            }
-                            filesToDownload.wait();
-                        }
+
+                        waitFileToDownloadLoop();
+
                         final Triad<VirtualFile, String, Short> fileData = filesToDownload.poll();
                         updateDownloadState(DownloadingState.STARTING, fileData.third, fileData.first);
                         final long startTime = SystemClock.currentThreadTimeMillis();
@@ -301,6 +295,18 @@ public class BOExplorerActivity extends AppCompatActivity {
         transaction.commit();
     }
 
+    private void waitFileToDownloadLoop() throws InterruptedException, IOException {
+        while (filesToDownload.isEmpty()) {
+            if (destroyed) {
+                if (socket != null) {
+                    socket.close();
+                }
+                return;
+            }
+            filesToDownload.wait();
+        }
+    }
+
     public static void sendFilename(OutputStream outputStream, String path) throws IOException {
         outputStream.write(ByteBuffer.wrap((path + '\n').getBytes()).array());
     }
@@ -311,7 +317,14 @@ public class BOExplorerActivity extends AppCompatActivity {
             return null;
         }
         byte[] dataFile = new byte[size];
-        inputStream.read(dataFile);
+        int read = 0;
+        while (read < size) {
+            int toread = size - read;
+            if(toread > 4096) {
+                toread = 4096;
+            }
+            read += inputStream.read(dataFile, read, toread);
+        }
         return dataFile;
     }
 
