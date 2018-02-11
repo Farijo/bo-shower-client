@@ -14,7 +14,7 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 
 import farijo.com.starcraft_bo_shower.R;
-import farijo.com.starcraft_bo_shower.file_explorer.BOExplorerActivity.Triad;
+import farijo.com.starcraft_bo_shower.network.FileSynchronizer;
 import farijo.com.starcraft_bo_shower.player.BOActivity;
 
 /**
@@ -98,11 +98,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                 btnDownloadStart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        activity.toStart = fullPathPath;
-                        synchronized (activity.filesToDownload) {
-                            activity.filesToDownload.add(new Triad<>(file, fullPathPath, ID));
-                            activity.filesToDownload.notify();
-                        }
+                        activity.synchronizer.addFileToDownload(new FileSynchronizer.BasicRequest(file, fullPathPath, ID), true);
                     }
                 });
             }
@@ -110,10 +106,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                 btnDownload.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        synchronized (activity.filesToDownload) {
-                            activity.filesToDownload.add(new Triad<>(file, fullPathPath, ID));
-                            activity.filesToDownload.notify();
-                        }
+                        activity.synchronizer.addFileToDownload(new FileSynchronizer.BasicRequest(file, fullPathPath, ID));
                     }
                 });
             }
@@ -121,8 +114,8 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                 btnStart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (activity.toStart != null) {
-                            activity.toStart = fullPathPath;
+                        if (activity.synchronizer.toStart != null) {
+                            activity.synchronizer.toStart = fullPathPath;
                             Toast.makeText(activity, "lancement de " + file.fileName + " dès que le prochain téléchargement termine", Toast.LENGTH_SHORT).show();
                         } else {
                             Intent intent = new Intent(activity, BOActivity.class);

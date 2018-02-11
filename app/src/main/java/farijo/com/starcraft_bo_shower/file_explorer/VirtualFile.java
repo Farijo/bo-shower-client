@@ -10,8 +10,8 @@ import java.util.Map;
  * Created by Teddy on 07/01/2018.
  */
 
-class VirtualFile {
-    final String fileName;
+public class VirtualFile {
+    public final String fileName;
     boolean isLocal;
     private boolean isFile;
     boolean updateAvailable;
@@ -66,17 +66,17 @@ class VirtualFile {
         }
     }
 
-    void startDownload() {
+    public void startDownload() {
         downloading = true;
     }
 
-    void endDownload() {
+    public void endDownload() {
         downloading = false;
         isLocal = true;
         updateAvailable = false;
     }
 
-    void endDownloadEmpty() {
+    public void endDownloadEmpty() {
         downloading = false;
     }
 
@@ -99,7 +99,7 @@ class VirtualFile {
         return res;
     }
 
-    void loadVirtualFilesFromStrings(String files[], Long timeUpdate[]) {
+    public void loadVirtualFilesFromStrings(String files[], Long timeUpdate[]) {
         for (int i = 0; i < files.length; i++) {
             VirtualFile actualVF = this;
             for (String s : files[i].split("/")) {
@@ -116,7 +116,7 @@ class VirtualFile {
         }
     }
 
-    static VirtualFile loadVirtualFilesLocals(Context context) {
+    public static VirtualFile loadVirtualFilesLocals(Context context) {
         return loadVirtualFilesLocals(context, null);
     }
 

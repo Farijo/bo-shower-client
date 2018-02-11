@@ -1,9 +1,7 @@
 package farijo.com.starcraft_bo_shower.file_explorer;
 
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -15,68 +13,28 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.NumberPicker;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import farijo.com.starcraft_bo_shower.R;
-import farijo.com.starcraft_bo_shower.player.BOActivity;
+import farijo.com.starcraft_bo_shower.network.FileSynchronizer;
 
 import static farijo.com.starcraft_bo_shower.file_explorer.ExplorerLevelFragment.ARG_PATH_KEY;
 
 public class BOExplorerActivity extends AppCompatActivity {
 
-    static class Triad<F, S, T> {
-        final F first;
-        final S second;
-        final T third;
-        Triad(F f, S s, T t) {
-            first = f;
-            second = s;
-            third = t;
-        }
-    }
-
-    static final String ROOT_NAME = "public";
-
-    VirtualFile fileSystem;
-
-    private boolean destroyed = false;
-    String toStart = null;
-
-    final ConcurrentLinkedQueue<Triad<VirtualFile, String, Short>> filesToDownload = new ConcurrentLinkedQueue<>();
-
-    private Thread socketIniter;
-    private boolean downloaderStarted = false;
-    private Socket socket;
-
+    public FileSynchronizer synchronizer;
     private List<ExplorerLevelFragment> fragmentsList = new ArrayList<>();
     private LinearLayout fragPath;
-
-    HashMap<Short, BOFileAdapter> activeAdapters = new HashMap<>();
+    private boolean isDestroyed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_boexplorer);
-
-        fileSystem = VirtualFile.loadVirtualFilesLocals(this);
 
         fragPath = findViewById(R.id.frag_path);
         ImageView prevFolder = findViewById(R.id.minus_one);
@@ -89,82 +47,6 @@ public class BOExplorerActivity extends AppCompatActivity {
         });
 
         showIpPortDialog();
-
-        final File localRootFolder = new File(getFilesDir(), "files");
-
-        new Thread() {
-            @Override
-            public void run() {
-                downloaderStarted = true;
-                try {
-                    synchronized (filesToDownload) {
-
-                        waitFileToDownloadLoop();
-
-                        final Triad<VirtualFile, String, Short> fileData = filesToDownload.poll();
-                        updateDownloadState(DownloadingState.STARTING, fileData.third, fileData.first);
-                        final long startTime = SystemClock.currentThreadTimeMillis();
-                        final String path = fileData.second;
-                        final File file = new File(localRootFolder, path);
-                        sendFilename(socket.getOutputStream(), path);
-                        BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
-                        byte[] filebytes = putSizeByteIntoBuffer(inputStream);
-                        if(filebytes != null) {
-                            file.getParentFile().mkdirs();
-                            file.createNewFile();
-                            FileOutputStream fileOutputStream = new FileOutputStream(file);
-                            fileOutputStream.write(filebytes);
-                            fileOutputStream.close();
-                            file.setLastModified(readDate(inputStream));
-                            final long restingTime = 800 - (SystemClock.currentThreadTimeMillis() - startTime);
-                            if(restingTime > 0){
-                                sleep(restingTime);
-                            }
-                            updateDownloadState(DownloadingState.ENDING_OK, fileData.third, fileData.first);
-                            if (path.equals(toStart)) {
-                                toStart = null;
-                                Intent intent = new Intent(BOExplorerActivity.this, BOActivity.class);
-                                intent.putExtra(BOActivity.BO_EXTRA, file.getAbsolutePath());
-                                startActivity(intent);
-                            }
-                        } else {
-                            if (path.equals(toStart)) {
-                                toStart = null;
-                            }
-                            updateDownloadState(DownloadingState.ENDING_EMPTY, fileData.third, fileData.first);
-                        }
-                    }
-                } catch (InterruptedException | IOException e) {
-                    e.printStackTrace();
-                }
-                run();
-            }
-        }.start();
-    }
-
-    private enum DownloadingState{ STARTING, ENDING_OK, ENDING_EMPTY }
-    private void updateDownloadState(final DownloadingState state, final short adapterId, final VirtualFile virtualFile) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                switch (state) {
-                    case STARTING:
-                        virtualFile.startDownload();
-                        break;
-                    case ENDING_OK:
-                        virtualFile.endDownload();
-                        Toast.makeText(getBaseContext(), virtualFile.fileName + " downloaded", Toast.LENGTH_SHORT).show();
-                        break;
-                    case ENDING_EMPTY:
-                        virtualFile.endDownloadEmpty();
-                        Toast.makeText(getBaseContext(), virtualFile.fileName + " is empty", Toast.LENGTH_SHORT).show();
-                        break;
-                }
-                if(activeAdapters.containsKey(adapterId)) {
-                    activeAdapters.get(adapterId).notifyChanged(virtualFile);
-                }
-            }
-        });
     }
 
     private void showIpPortDialog() {
@@ -173,7 +55,7 @@ public class BOExplorerActivity extends AppCompatActivity {
         final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
         portServer.setMaxValue(Short.MAX_VALUE - Short.MIN_VALUE);
         ipServer.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_CLASS_TEXT);
-        ipServer.setText("192.168.0.13");
+        ipServer.setText("192.168.1.20");
         portServer.setValue(4040);
         new AlertDialog.Builder(this)
                 .setTitle("IP & port")
@@ -182,69 +64,29 @@ public class BOExplorerActivity extends AppCompatActivity {
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        startConnection(ipServer.getText().toString(), portServer.getValue());
+                        synchronizer = new FileSynchronizer(
+                                BOExplorerActivity.this,
+                                ipServer.getText().toString(),
+                                portServer.getValue()
+                        );
+                        synchronizer.start();
                     }
                 })
                 .show();
     }
 
-    private void startConnection(final String ip, final int port) {
-        socketIniter = new Thread() {
-            @Override
-            public void run() {
-                try {
-                    socket = new Socket();
-                    socket.connect(new InetSocketAddress(ip, port), 6000);
-                    List<String> fileList = new ArrayList<>();
-                    List<Long> fileUpdateTime = new ArrayList<>();
-                    String data;
-                    BufferedInputStream inputStream = new BufferedInputStream(socket.getInputStream());
-                    do {
-                        data = receiveSizeByteIntoString(inputStream);
-                        if (data != null) {
-                            fileList.add(data);
-                            fileUpdateTime.add(readDate(inputStream));
-                        }
-                    } while (data != null);
-                    fileSystem.loadVirtualFilesFromStrings(
-                            fileList.toArray(new String[fileList.size()]),
-                            fileUpdateTime.toArray(new Long[fileUpdateTime.size()])
-                    );
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } finally {
-                    if(!destroyed) {
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                addFragment(ROOT_NAME);
-                            }
-                        });
-                    }
-                }
-            }
-        };
-        socketIniter.start();
+    @Override
+    protected void onDestroy() {
+        isDestroyed = true;
+        synchronized (synchronizer) {
+            synchronizer.notify();
+        }
+        super.onDestroy();
     }
 
     @Override
-    protected void onDestroy() {
-        destroyed = true;
-        if(downloaderStarted) {
-            synchronized (filesToDownload) {
-                filesToDownload.notify();
-            }
-        } else {
-            if(socket != null) {
-                try {
-                    socket.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        socketIniter.interrupt();
-        super.onDestroy();
+    public boolean isDestroyed() {
+        return isDestroyed;
     }
 
     public void addFragment(String path) {
@@ -293,76 +135,6 @@ public class BOExplorerActivity extends AppCompatActivity {
             fragmentsList.get(firstIndex - 1).canProceed = true;
         }
         transaction.commit();
-    }
-
-    private void waitFileToDownloadLoop() throws InterruptedException, IOException {
-        while (filesToDownload.isEmpty()) {
-            if (destroyed) {
-                if (socket != null) {
-                    socket.close();
-                }
-                return;
-            }
-            filesToDownload.wait();
-        }
-    }
-
-    public static void sendFilename(OutputStream outputStream, String path) throws IOException {
-        outputStream.write(ByteBuffer.wrap((path + '\n').getBytes()).array());
-    }
-
-    public static byte[] putSizeByteIntoBuffer(InputStream inputStream) throws IOException {
-        int size = readShort(inputStream);
-        if (size <= 0) {
-            return null;
-        }
-        byte[] dataFile = new byte[size];
-        int read = 0;
-        while (read < size) {
-            int toread = size - read;
-            if(toread > 4096) {
-                toread = 4096;
-            }
-            read += inputStream.read(dataFile, read, toread);
-        }
-        return dataFile;
-    }
-
-    public static String receiveSizeByteIntoString(InputStream stream) throws IOException {
-        byte[] dataSize = new byte[2];
-        stream.read(dataSize);
-        int size = ByteBuffer.wrap(dataSize).order(ByteOrder.BIG_ENDIAN).getShort();
-        if (size <= 0) {
-            return null;
-        }
-        byte[] dataFileName = new byte[size];
-        stream.read(dataFileName, 0, size);
-        return new String(dataFileName, 0, size);
-    }
-
-    public static short readShort(InputStream inputStream) throws IOException{
-        byte[] dataSize = new byte[2];
-        inputStream.read(dataSize);
-        return ByteBuffer.wrap(dataSize).order(ByteOrder.BIG_ENDIAN).getShort();
-    }
-
-    public static long readDate(InputStream inputStream) throws IOException{
-        byte[] data = new byte[12];
-        inputStream.read(data);
-        Calendar calendar = Calendar.getInstance();
-        final long NOW = calendar.getTimeInMillis();
-        calendar.setTimeInMillis(0);
-        ByteBuffer buffer = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
-        calendar.set(Calendar.YEAR, buffer.getShort(0));
-        calendar.set(Calendar.MONTH, buffer.getShort(2)-1);
-        calendar.set(Calendar.DAY_OF_MONTH, buffer.getShort(4));
-        calendar.set(Calendar.HOUR_OF_DAY, buffer.getShort(6));
-        calendar.set(Calendar.MINUTE, buffer.getShort(8));
-        calendar.set(Calendar.SECOND, buffer.getShort(10));
-        if(calendar.getTimeInMillis() > NOW) {
-            return NOW;
-        }
-        return calendar.getTimeInMillis();
     }
 }
 
