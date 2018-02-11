@@ -2,5 +2,6 @@
 
 BO Shower is a Starcraft 2 build order visualiser android client application.
 
-![BO Explorer](graphics/bo_explorer.png "BO Explorer" | width=100)
-![BO Viewer](graphics/bo_viewer.png "BO Viewer" | width=100)
+<img src="graphics/bo_explorer.png" width="200">
+<img src="graphics/bo_viewer.png" width="200">
+
