@@ -1,6 +1,6 @@
 package farijo.com.starcraft_bo_shower.network;
 
-import android.widget.Toast;
+import android.os.SystemClock;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,7 +23,7 @@ import farijo.com.starcraft_bo_shower.file_explorer.VirtualFile;
 public class FileSynchronizer extends Thread {
 
     private static final String ROOT_NAME = "public";
-    private static final long MIN_DOWNLOAD_TIME_MILLIS = 800;
+    private static final long MIN_DOWNLOAD_TIME_MILLIS = 650;
 
     public static class BasicRequest {
         final VirtualFile representingFile;
@@ -47,6 +47,7 @@ public class FileSynchronizer extends Thread {
     private final String ip;
     private final int port;
     private String toStart = null;
+    private long downloadStartTime = 0L;
 
     public FileSynchronizer(BOExplorerActivity wrappingActivity, String ip, int port) {
         this.wrappingActivity = wrappingActivity;
@@ -70,7 +71,7 @@ public class FileSynchronizer extends Thread {
         }
     }
 
-    public void cancelLaunchRequest() {
+    public void resetLaunchRequest() {
         toStart = null;
     }
 
@@ -160,21 +161,13 @@ public class FileSynchronizer extends Thread {
         final BasicRequest request = getNextFileRequested();
         final String requestedFilepath = request.fullPath;
 
-        requestFileToServer(requestedFilepath);
-        updateDownloadState(DownloadingState.STARTING, request);
+        requestFileToServer(request);
 
-        final File receivedFile = receiveAndStoreFileFromServer(clientInternalRoot, requestedFilepath);
-        if(receivedFile != null) {
-            updateDownloadState(DownloadingState.ENDING_OK, request);
-            if (mustBeStarted(requestedFilepath)) {
-                cancelLaunchRequest();
-                wrappingActivity.startBO(receivedFile.getAbsolutePath());
-            }
-        } else {
-            updateDownloadState(DownloadingState.ENDING_EMPTY, request);
-            if (mustBeStarted(requestedFilepath)) {
-                cancelLaunchRequest();
-            }
+        final File receivedFile = receiveAndStoreFileFromServer(clientInternalRoot, request);
+
+        if (mustBeStarted(requestedFilepath)) {
+            resetLaunchRequest();
+            checkAndLaunch(receivedFile);
         }
     }
 
@@ -182,23 +175,27 @@ public class FileSynchronizer extends Thread {
         return filesToDownload.poll();
     }
 
-    private void requestFileToServer(String filepath) throws IOException {
-        boStream.getOutputStream().writeFilename(filepath);
+    private void requestFileToServer(BasicRequest request) throws IOException {
+        boStream.getOutputStream().writeFilename(request.fullPath);
+
+        updateDownloadState(DownloadingState.STARTING, request);
     }
 
-    private File receiveAndStoreFileFromServer(File storageRoot, String storePath) throws IOException {
+    private File receiveAndStoreFileFromServer(File storageRoot, BasicRequest request) throws IOException {
         BOInputStream inputStream = boStream.getInputStream();
         byte[] fileBytes = inputStream.readBOFile();
         if (fileBytes != null) {
-            final File file = new File(storageRoot, storePath);
+            final File file = new File(storageRoot, request.fullPath);
             file.getParentFile().mkdirs();
             file.createNewFile();
             FileOutputStream fileOutputStream = new FileOutputStream(file);
             fileOutputStream.write(fileBytes);
             fileOutputStream.close();
             file.setLastModified(inputStream.readDate());
+            updateDownloadState(DownloadingState.ENDING_OK, request);
             return file;
         } else {
+            updateDownloadState(DownloadingState.ENDING_EMPTY, request);
             return null;
         }
     }
@@ -207,30 +204,48 @@ public class FileSynchronizer extends Thread {
         return toStart.equals(path);
     }
 
+    private void checkAndLaunch(File boFile) {
+        if(boFile != null) {
+            wrappingActivity.startBO(boFile.getAbsolutePath());
+        }
+    }
+
     private enum DownloadingState{ STARTING, ENDING_OK, ENDING_EMPTY }
     private void updateDownloadState(final DownloadingState state, final BasicRequest request) {
         final short adapterId = request.adapterKey;
         final VirtualFile virtualFile = request.representingFile;
+
+        switch (state) {
+            case STARTING:
+                downloadStartTime = SystemClock.currentThreadTimeMillis();
+                virtualFile.startDownload();
+                break;
+            case ENDING_OK:
+                sleepUntilMinDownloadTime();
+                virtualFile.endDownload();
+                break;
+            case ENDING_EMPTY:
+                sleepUntilMinDownloadTime();
+                virtualFile.endDownloadEmpty();
+                break;
+        }
+
         wrappingActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                switch (state) {
-                    case STARTING:
-                        virtualFile.startDownload();
-                        break;
-                    case ENDING_OK:
-                        virtualFile.endDownload();
-                        Toast.makeText(wrappingActivity, virtualFile.fileName + " downloaded", Toast.LENGTH_SHORT).show();
-                        break;
-                    case ENDING_EMPTY:
-                        virtualFile.endDownloadEmpty();
-                        Toast.makeText(wrappingActivity, virtualFile.fileName + " is empty", Toast.LENGTH_SHORT).show();
-                        break;
-                }
                 if(activeAdapters.containsKey(adapterId)) {
                     activeAdapters.get(adapterId).notifyChanged(virtualFile);
                 }
             }
         });
+    }
+
+    private void sleepUntilMinDownloadTime() {
+        final long downloadDeltaTime = SystemClock.currentThreadTimeMillis() - downloadStartTime;
+        if(0 < downloadDeltaTime && downloadDeltaTime < MIN_DOWNLOAD_TIME_MILLIS) {
+            try {
+                sleep(downloadDeltaTime);
+            } catch (InterruptedException ignored) {}
+        }
     }
 }

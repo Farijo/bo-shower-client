@@ -1,13 +1,11 @@
 package farijo.com.starcraft_bo_shower.file_explorer;
 
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
@@ -15,7 +13,6 @@ import java.io.File;
 
 import farijo.com.starcraft_bo_shower.R;
 import farijo.com.starcraft_bo_shower.network.FileSynchronizer;
-import farijo.com.starcraft_bo_shower.player.BOActivity;
 
 /**
  * Created by Teddy on 30/12/2017.
@@ -114,7 +111,7 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                 btnStart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        activity.synchronizer.cancelLaunchRequest();
+                        activity.synchronizer.resetLaunchRequest();
                         activity.startBO(new File(new File(activity.getFilesDir(), "files"), fullPathPath).getAbsolutePath());
                     }
                 });
