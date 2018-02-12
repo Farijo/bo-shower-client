@@ -1,7 +1,5 @@
 package farijo.com.starcraft_bo_shower.network;
 
-import android.content.Intent;
-import android.os.SystemClock;
 import android.widget.Toast;
 
 import java.io.File;
@@ -17,7 +15,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import farijo.com.starcraft_bo_shower.file_explorer.BOExplorerActivity;
 import farijo.com.starcraft_bo_shower.file_explorer.BOFileAdapter;
 import farijo.com.starcraft_bo_shower.file_explorer.VirtualFile;
-import farijo.com.starcraft_bo_shower.player.BOActivity;
 
 /**
  * Created by Teddy on 11/02/2018.
@@ -146,38 +143,7 @@ public class FileSynchronizer extends Thread {
             return;
         }
 
-        final BasicRequest fileData = filesToDownload.poll();
-
-        updateDownloadState(DownloadingState.STARTING, fileData.adapterKey, fileData.representingFile);
-        final long startTime = SystemClock.currentThreadTimeMillis();
-        final String path = fileData.fullPath;
-        boStream.getOutputStream().writeFilename(path);
-        BOInputStream inputStream = boStream.getInputStream();
-        byte[] filebytes = inputStream.readBOFile();
-
-        if (filebytes != null) {
-            final File file = new File(clientInternalRoot, path);
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-            FileOutputStream fileOutputStream = new FileOutputStream(file);
-            fileOutputStream.write(filebytes);
-            fileOutputStream.close();
-            file.setLastModified(inputStream.readDate());
-            final long restingTime = MIN_DOWNLOAD_TIME_MILLIS - (SystemClock.currentThreadTimeMillis() - startTime);
-            if (restingTime > 0) {
-                sleep(restingTime);
-            }
-            updateDownloadState(DownloadingState.ENDING_OK, fileData.adapterKey, fileData.representingFile);
-            if (path.equals(toStart)) {
-                cancelLaunchRequest();
-                wrappingActivity.startBO(file.getAbsolutePath());
-            }
-        } else {
-            if (path.equals(toStart)) {
-                cancelLaunchRequest();
-            }
-            updateDownloadState(DownloadingState.ENDING_EMPTY, fileData.adapterKey, fileData.representingFile);
-        }
+        requestAndReceiveFile(clientInternalRoot);
 
         downloadFileLoop(clientInternalRoot);
     }
@@ -190,8 +156,61 @@ public class FileSynchronizer extends Thread {
         }
     }
 
+    private void requestAndReceiveFile(File clientInternalRoot) throws IOException {
+        final BasicRequest request = getNextFileRequested();
+        final String requestedFilepath = request.fullPath;
+
+        requestFileToServer(requestedFilepath);
+        updateDownloadState(DownloadingState.STARTING, request);
+
+        final File receivedFile = receiveAndStoreFileFromServer(clientInternalRoot, requestedFilepath);
+        if(receivedFile != null) {
+            updateDownloadState(DownloadingState.ENDING_OK, request);
+            if (mustBeStarted(requestedFilepath)) {
+                cancelLaunchRequest();
+                wrappingActivity.startBO(receivedFile.getAbsolutePath());
+            }
+        } else {
+            updateDownloadState(DownloadingState.ENDING_EMPTY, request);
+            if (mustBeStarted(requestedFilepath)) {
+                cancelLaunchRequest();
+            }
+        }
+    }
+
+    private BasicRequest getNextFileRequested() {
+        return filesToDownload.poll();
+    }
+
+    private void requestFileToServer(String filepath) throws IOException {
+        boStream.getOutputStream().writeFilename(filepath);
+    }
+
+    private File receiveAndStoreFileFromServer(File storageRoot, String storePath) throws IOException {
+        BOInputStream inputStream = boStream.getInputStream();
+        byte[] fileBytes = inputStream.readBOFile();
+        if (fileBytes != null) {
+            final File file = new File(storageRoot, storePath);
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+            FileOutputStream fileOutputStream = new FileOutputStream(file);
+            fileOutputStream.write(fileBytes);
+            fileOutputStream.close();
+            file.setLastModified(inputStream.readDate());
+            return file;
+        } else {
+            return null;
+        }
+    }
+
+    private boolean mustBeStarted(String path) {
+        return toStart.equals(path);
+    }
+
     private enum DownloadingState{ STARTING, ENDING_OK, ENDING_EMPTY }
-    private void updateDownloadState(final DownloadingState state, final short adapterId, final VirtualFile virtualFile) {
+    private void updateDownloadState(final DownloadingState state, final BasicRequest request) {
+        final short adapterId = request.adapterKey;
+        final VirtualFile virtualFile = request.representingFile;
         wrappingActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
