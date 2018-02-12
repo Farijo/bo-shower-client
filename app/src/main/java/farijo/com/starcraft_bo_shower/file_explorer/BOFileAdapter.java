@@ -114,14 +114,8 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
                 btnStart.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        if (activity.synchronizer.toStart != null) {
-                            activity.synchronizer.toStart = fullPathPath;
-                            Toast.makeText(activity, "lancement de " + file.fileName + " dès que le prochain téléchargement termine", Toast.LENGTH_SHORT).show();
-                        } else {
-                            Intent intent = new Intent(activity, BOActivity.class);
-                            intent.putExtra(BOActivity.BO_EXTRA, new File(new File(activity.getFilesDir(), "files"), fullPathPath).getAbsolutePath());
-                            activity.startActivity(intent);
-                        }
+                        activity.synchronizer.cancelLaunchRequest();
+                        activity.startBO(new File(new File(activity.getFilesDir(), "files"), fullPathPath).getAbsolutePath());
                     }
                 });
             }

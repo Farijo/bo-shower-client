@@ -40,7 +40,6 @@ public class FileSynchronizer extends Thread {
         }
     }
 
-    public String toStart = null;
     public HashMap<Short, BOFileAdapter> activeAdapters = new HashMap<>();
     public final VirtualFile fileSystem;
 
@@ -50,6 +49,7 @@ public class FileSynchronizer extends Thread {
     private final BOExplorerActivity wrappingActivity;
     private final String ip;
     private final int port;
+    private String toStart = null;
 
     public FileSynchronizer(BOExplorerActivity wrappingActivity, String ip, int port) {
         this.wrappingActivity = wrappingActivity;
@@ -71,6 +71,10 @@ public class FileSynchronizer extends Thread {
             }
             filesToDownload.notify();
         }
+    }
+
+    public void cancelLaunchRequest() {
+        toStart = null;
     }
 
     @Override
@@ -165,14 +169,12 @@ public class FileSynchronizer extends Thread {
             }
             updateDownloadState(DownloadingState.ENDING_OK, fileData.adapterKey, fileData.representingFile);
             if (path.equals(toStart)) {
-                toStart = null;
-                Intent intent = new Intent(wrappingActivity, BOActivity.class);
-                intent.putExtra(BOActivity.BO_EXTRA, file.getAbsolutePath());
-                wrappingActivity.startActivity(intent);
+                cancelLaunchRequest();
+                wrappingActivity.startBO(file.getAbsolutePath());
             }
         } else {
             if (path.equals(toStart)) {
-                toStart = null;
+                cancelLaunchRequest();
             }
             updateDownloadState(DownloadingState.ENDING_EMPTY, fileData.adapterKey, fileData.representingFile);
         }

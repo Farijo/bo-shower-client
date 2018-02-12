@@ -1,6 +1,7 @@
 package farijo.com.starcraft_bo_shower.file_explorer;
 
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AlertDialog;
@@ -21,6 +22,7 @@ import java.util.List;
 
 import farijo.com.starcraft_bo_shower.R;
 import farijo.com.starcraft_bo_shower.network.FileSynchronizer;
+import farijo.com.starcraft_bo_shower.player.BOActivity;
 
 import static farijo.com.starcraft_bo_shower.file_explorer.ExplorerLevelFragment.ARG_PATH_KEY;
 
@@ -135,6 +137,12 @@ public class BOExplorerActivity extends AppCompatActivity {
             fragmentsList.get(firstIndex - 1).canProceed = true;
         }
         transaction.commit();
+    }
+
+    public void startBO(String boFilePath) {
+        Intent intent = new Intent(this, BOActivity.class);
+        intent.putExtra(BOActivity.BO_EXTRA, boFilePath);
+        startActivity(intent);
     }
 }
 
