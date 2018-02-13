@@ -39,8 +39,8 @@ public class FileSynchronizer extends Thread {
     }
 
     public HashMap<Short, BOFileAdapter> activeAdapters = new HashMap<>();
-    public final VirtualFile fileSystem;
 
+    private final VirtualFile fileSystem;
     private final ConcurrentLinkedQueue<BasicRequest> filesToDownload = new ConcurrentLinkedQueue<>();
     private final Socket socket = new Socket();
     private final BOStream boStream = new BOStream(socket);
@@ -56,6 +56,10 @@ public class FileSynchronizer extends Thread {
         this.port = port;
 
         fileSystem = VirtualFile.loadVirtualFilesLocals(wrappingActivity);
+    }
+
+    public VirtualFile getFileSystem() {
+        return fileSystem;
     }
 
     public void addFileToDownload(BasicRequest request) {
