@@ -1,6 +1,7 @@
 package farijo.com.starcraft_bo_shower.network;
 
 import android.os.SystemClock;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -201,7 +202,7 @@ public class FileSynchronizer extends Thread {
     }
 
     private boolean mustBeStarted(String path) {
-        return toStart.equals(path);
+        return path.equals(toStart);
     }
 
     private void checkAndLaunch(File boFile) {
@@ -223,13 +224,39 @@ public class FileSynchronizer extends Thread {
             case ENDING_OK:
                 sleepUntilMinDownloadTime();
                 virtualFile.endDownload();
+                showToast(state);
                 break;
             case ENDING_EMPTY:
                 sleepUntilMinDownloadTime();
                 virtualFile.endDownloadEmpty();
+                showToast(state);
                 break;
         }
 
+        notifyVirtualFileChanged(adapterId, virtualFile);
+    }
+
+    private void sleepUntilMinDownloadTime() {
+        final long downloadDeltaTime = MIN_DOWNLOAD_TIME_MILLIS - (SystemClock.currentThreadTimeMillis() - downloadStartTime);
+        if(0 < downloadDeltaTime) {
+            try {
+                sleep(downloadDeltaTime);
+            } catch (InterruptedException ignored) {
+                ignored.printStackTrace();
+            }
+        }
+    }
+
+    private void showToast(final DownloadingState state) {
+        wrappingActivity.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(wrappingActivity, "Téléchargement terminé : "+state, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void notifyVirtualFileChanged(final Short adapterId, final VirtualFile virtualFile) {
         wrappingActivity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -238,14 +265,5 @@ public class FileSynchronizer extends Thread {
                 }
             }
         });
-    }
-
-    private void sleepUntilMinDownloadTime() {
-        final long downloadDeltaTime = SystemClock.currentThreadTimeMillis() - downloadStartTime;
-        if(0 < downloadDeltaTime && downloadDeltaTime < MIN_DOWNLOAD_TIME_MILLIS) {
-            try {
-                sleep(downloadDeltaTime);
-            } catch (InterruptedException ignored) {}
-        }
     }
 }
