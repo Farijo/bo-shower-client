@@ -1,4 +1,4 @@
-package farijo.com.starcraft_bo_shower.network;
+package farijo.com.starcraft_bo_shower.network.custom_server;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

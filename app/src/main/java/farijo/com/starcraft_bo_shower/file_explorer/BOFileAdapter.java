@@ -12,7 +12,7 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 
 import farijo.com.starcraft_bo_shower.R;
-import farijo.com.starcraft_bo_shower.network.FileSynchronizer;
+import farijo.com.starcraft_bo_shower.network.custom_server.FileSynchronizer;
 
 /**
  * Created by Teddy on 30/12/2017.

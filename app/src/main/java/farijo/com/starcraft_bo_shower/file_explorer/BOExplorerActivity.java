@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import farijo.com.starcraft_bo_shower.R;
-import farijo.com.starcraft_bo_shower.network.FileSynchronizer;
+import farijo.com.starcraft_bo_shower.network.custom_server.FileSynchronizer;
 import farijo.com.starcraft_bo_shower.player.BOActivity;
 
 import static farijo.com.starcraft_bo_shower.file_explorer.ExplorerLevelFragment.ARG_PATH_KEY;
@@ -57,7 +57,7 @@ public class BOExplorerActivity extends AppCompatActivity {
         final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
         portServer.setMaxValue(Short.MAX_VALUE - Short.MIN_VALUE);
         ipServer.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_CLASS_TEXT);
-        ipServer.setText("192.168.1.20");
+        ipServer.setText("192.168.0.13");
         portServer.setValue(4040);
         new AlertDialog.Builder(this)
                 .setTitle("IP & port")
