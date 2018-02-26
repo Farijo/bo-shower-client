@@ -10,6 +10,7 @@ import android.view.View;
 import java.io.IOException;
 
 import farijo.com.starcraft_bo_shower.file_explorer.BOExplorerActivity;
+import farijo.com.starcraft_bo_shower.network.bo_grabber.BOGrabber;
 
 public class StartActivity extends AppCompatActivity {
 
@@ -22,6 +23,13 @@ public class StartActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 startActivity(new Intent(StartActivity.this, BOExplorerActivity.class));
+            }
+        });
+
+        findViewById(R.id.grabBO).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new BOGrabber(StartActivity.this).grab("https://lotv.spawningtool.com/build/41145/");
             }
         });
 
