@@ -23,6 +23,14 @@
         android:layout_margin="10dp"
         android:text="Grab BO" />
 
+    <Button
+        android:id="@+id/grabBO"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"
+        android:text="Récuperer des BO d'une BDD" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/liste"
         android:layout_width="match_parent"
