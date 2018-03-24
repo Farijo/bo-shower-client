@@ -33,6 +33,13 @@ public class StartActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.loadFromBOBDD).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(StartActivity.this, BODatabaseActivity.class));
+            }
+        });
+
         RecyclerView recycler = findViewById(R.id.liste);
         recycler.setLayoutManager(new LinearLayoutManager(this));
         BuildListAdapter adapter = new BuildListAdapter(this);
