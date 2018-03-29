@@ -3,8 +3,10 @@ package farijo.com.starcraft_bo_shower.network.bo_database;
 import android.util.Log;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 
 /**
@@ -20,8 +22,15 @@ public class BODatabase {
             @Override
             public void run() {
                 try {
-                    connection = DriverManager.getConnection("jdbc:mysql://192.168.1.43:3306/bo_database_repo", "diugh", null);
-                    notifyAll();
+                    Class.forName("com.mysql.jdbc.Driver");
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    connection = DriverManager.getConnection("jdbc:mysql://192.168.0.13:3306/bo_database_repo", "database_client", null);
+                    synchronized (BODatabase.this) {
+                        BODatabase.this.notifyAll();
+                    }
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
@@ -33,10 +42,10 @@ public class BODatabase {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                synchronized (this) {
+                synchronized (BODatabase.this) {
                     while (connection == null) {
                         try {
-                            wait();
+                            BODatabase.this.wait();
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
@@ -50,7 +59,15 @@ public class BODatabase {
                                     "WHERE bo.build_name = ?";
                     final PreparedStatement statement = connection.prepareStatement(boRequest);
                     statement.setString(1, boName);
-                    Log.d("odfidoug", "requestBO: " + statement.executeQuery());
+                    ResultSet res = statement.executeQuery();
+                    while (res.next()) {
+                        int id  = res.getInt(1);
+                        int pop = res.getInt(2);
+                        Date time = res.getDate(3);
+                        int entityId = res.getInt(4);
+                        String details = res.getString(5);
+                        Log.d("dfgdgdg", "run: " + id +" | "+ pop +" | "+ time +" | "+ entityId +" | "+ details);
+                    }
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
