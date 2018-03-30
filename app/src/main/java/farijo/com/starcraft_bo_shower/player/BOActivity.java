@@ -41,91 +41,92 @@ public class BOActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        File file = new File(getIntent().getStringExtra(BO_EXTRA));
 
         TextView title = findViewById(R.id.bo_title);
-        title.setText(removeFileExtensions(file.getName()));
 
         bindOptionPanelAnimation(R.id.title_panel, R.id.arrow, R.id.option_panel);
 
         final BuildOrderAdapter adapter = new BuildOrderAdapter();
-
         boolean playEnabled = true;
 
-        try {
-            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            XmlPullParser parser = factory.newPullParser();
-            parser.setInput(new FileInputStream(file), "UTF-8");
+        if(getIntent().hasExtra(BO_EXTRA)) {
+            File file = new File(getIntent().getStringExtra(BO_EXTRA));
+            title.setText(removeFileExtensions(file.getName()));
+            try {
+                XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+                factory.setNamespaceAware(true);
+                XmlPullParser parser = factory.newPullParser();
+                parser.setInput(new FileInputStream(file), "UTF-8");
 
-            int event = parser.getEventType();
-            SC2Action currentAction = null;
-            String name = null;
-            int previousTiming = 0;
-            while (event != XmlPullParser.END_DOCUMENT) {
-                switch (event) {
-                    case XmlPullParser.END_TAG:
-                        name = null;
-                        break;
-                    case XmlPullParser.START_TAG:
-                        switch (parser.getName()) {
-                            case "action":
-                                if (currentAction != null && currentAction.timing == NO_TIMING) {
-                                    playEnabled = false;
-                                    adapter.disableTimings();
-                                }
-                                adapter.add(currentAction);
-                                currentAction = new SC2Action();
-                                break;
-                            case "onfinish":
-                                try {
-                                    currentAction.onFinish = Integer.parseInt(parser.getAttributeValue(null, "ref"));
-                                } catch (NumberFormatException ignored) {
-                                }
-                                break;
-                            case "prod":
-                                currentAction.ressourceIcon = SC2Action.getDrawableId(parser.getAttributeValue(null, "image"));
-                                try {
-                                    currentAction.count = Integer.parseInt(parser.getAttributeValue(null, "count"));
-                                } catch (NumberFormatException ignored) {
-                                }
-                            case "pop":
-                            case "time":
-                            case "details":
-                                name = parser.getName();
-                                break;
-                        }
-                        break;
-
-                    case XmlPullParser.TEXT:
-                        final String value = parser.getText().trim();
-                        if (name == null || value.isEmpty()) {
+                int event = parser.getEventType();
+                SC2Action currentAction = null;
+                String name = null;
+                int previousTiming = 0;
+                while (event != XmlPullParser.END_DOCUMENT) {
+                    switch (event) {
+                        case XmlPullParser.END_TAG:
+                            name = null;
                             break;
-                        }
-                        switch (name) {
-                            case "pop":
-                                currentAction.population = value;
-                                break;
-                            case "time":
-                                currentAction.strTiming = value;
-                                currentAction.timing = Integer.parseInt(value.substring(0, value.indexOf(':'))) * 60 + Integer.parseInt(value.substring(value.indexOf(':') + 1));
-                                currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming) / 10);
-                                previousTiming = currentAction.timing;
-                                break;
-                            case "prod":
-                                currentAction.name = value;
-                                break;
-                            case "details":
-                                currentAction.details = value;
-                                break;
-                        }
-                        break;
-                }
-                event = parser.next();
-            }
+                        case XmlPullParser.START_TAG:
+                            switch (parser.getName()) {
+                                case "action":
+                                    if (currentAction != null && currentAction.timing == NO_TIMING) {
+                                        playEnabled = false;
+                                        adapter.disableTimings();
+                                    }
+                                    adapter.add(currentAction);
+                                    currentAction = new SC2Action();
+                                    break;
+                                case "onfinish":
+                                    try {
+                                        currentAction.onFinish = Integer.parseInt(parser.getAttributeValue(null, "ref"));
+                                    } catch (NumberFormatException ignored) {
+                                    }
+                                    break;
+                                case "prod":
+                                    currentAction.ressourceIcon = SC2Action.getDrawableId(parser.getAttributeValue(null, "image"));
+                                    try {
+                                        currentAction.count = Integer.parseInt(parser.getAttributeValue(null, "count"));
+                                    } catch (NumberFormatException ignored) {
+                                    }
+                                case "pop":
+                                case "time":
+                                case "details":
+                                    name = parser.getName();
+                                    break;
+                            }
+                            break;
 
-        } catch (IOException | NullPointerException | XmlPullParserException e) {
-            e.printStackTrace();
+                        case XmlPullParser.TEXT:
+                            final String value = parser.getText().trim();
+                            if (name == null || value.isEmpty()) {
+                                break;
+                            }
+                            switch (name) {
+                                case "pop":
+                                    currentAction.population = value;
+                                    break;
+                                case "time":
+                                    currentAction.strTiming = value;
+                                    currentAction.timing = Integer.parseInt(value.substring(0, value.indexOf(':'))) * 60 + Integer.parseInt(value.substring(value.indexOf(':') + 1));
+                                    currentAction.deltaTiming = (long) (1000 * (currentAction.timing - previousTiming) / 10);
+                                    previousTiming = currentAction.timing;
+                                    break;
+                                case "prod":
+                                    currentAction.name = value;
+                                    break;
+                                case "details":
+                                    currentAction.details = value;
+                                    break;
+                            }
+                            break;
+                    }
+                    event = parser.next();
+                }
+
+            } catch (IOException | NullPointerException | XmlPullParserException e) {
+                e.printStackTrace();
+            }
         }
 
         RecyclerView recycler = findViewById(R.id.building);
