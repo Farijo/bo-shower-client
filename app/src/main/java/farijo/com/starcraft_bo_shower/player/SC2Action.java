@@ -263,7 +263,7 @@ public class SC2Action {
     }
 
     @DrawableRes
-    static int getDrawableId(String value) {
+    public static int getDrawableId(String value) {
         if(strToResource == null) {
             initialize();
         }
@@ -274,20 +274,20 @@ public class SC2Action {
         }
     }
 
-    static final int NO_TIMING = -1;
+    public static final int NO_TIMING = -1;
 
-    String population;
-    String strTiming;
-    int onFinish = -1;
-    long deltaTiming;
-    int timing = NO_TIMING;
-    String name;
-    int ressourceIcon;
-    int count = 1;
-    String details;
+    public String population;
+    public String strTiming;
+    public int onFinish = -1;
+    public long deltaTiming;
+    public int timing = NO_TIMING;
+    public String name;
+    public int ressourceIcon;
+    public int count = 1;
+    public String details;
     View view;
 
-    SC2Action() {
+    public SC2Action() {
 
     }
 

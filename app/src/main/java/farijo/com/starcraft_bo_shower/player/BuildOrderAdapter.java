@@ -32,12 +32,9 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         timingsOk = false;
     }
 
-    public void add(SC2Action a) {
-        if(a == null) {
-            return;
-        }
-        actions.add(a);
-        notifyItemInserted(actions.size()-1);
+    public void setActions(List<SC2Action> a) {
+        actions = a;
+        notifyDataSetChanged();
     }
 
     public void showTimers(boolean show) {
