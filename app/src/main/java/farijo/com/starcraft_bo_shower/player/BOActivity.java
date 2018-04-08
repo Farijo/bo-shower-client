@@ -55,7 +55,7 @@ public class BOActivity extends AppCompatActivity {
                     adapter.disableTimings();
                 }
                 adapter.setActions(parser.getActions());
-            } catch (IOException | NullPointerException | XmlPullParserException e) {
+            } catch (IOException | XmlPullParserException e) {
                 e.printStackTrace();
             }
         }

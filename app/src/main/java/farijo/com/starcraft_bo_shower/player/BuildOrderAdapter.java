@@ -95,7 +95,7 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         holder.pop.setText(act.population);
         if(act.onFinish >= 0) {
             holder.finishFlag.setVisibility(View.VISIBLE);
-            holder.onFinishAction.setImageResource(actions.get(act.onFinish).ressourceIcon);
+            holder.onFinishAction.setImageResource(actions.get(act.onFinish).resourceIcon);
         }
         if(timingsOk && showTimer) {
             holder.time.setText(act.strTiming);
@@ -103,7 +103,7 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         } else {
             holder.time.setVisibility(View.GONE);
         }
-        holder.icon.setImageResource(act.ressourceIcon);
+        holder.icon.setImageResource(act.resourceIcon);
         if(act.count > 1) {
             holder.count.setText(String.valueOf(act.count));
         }

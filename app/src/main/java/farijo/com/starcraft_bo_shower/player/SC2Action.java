@@ -282,7 +282,7 @@ public class SC2Action {
     public long deltaTiming;
     public int timing = NO_TIMING;
     public String name;
-    public int ressourceIcon;
+    public int resourceIcon;
     public int count = 1;
     public String details;
     View view;

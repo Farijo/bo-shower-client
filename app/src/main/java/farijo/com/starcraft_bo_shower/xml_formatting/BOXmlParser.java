@@ -52,7 +52,7 @@ public class BOXmlParser {
                             currentAction.onFinish = intAttributeValue(Tags.Attribute.REF, -1);
                             break;
                         case Tags.Name.PROD:
-                            currentAction.ressourceIcon = SC2Action.getDrawableId(attributeValue(Tags.Attribute.IMAGE));
+                            currentAction.resourceIcon = SC2Action.getDrawableId(attributeValue(Tags.Attribute.IMAGE));
                             currentAction.count = intAttributeValue(Tags.Attribute.COUNT, 1);
                         case Tags.Name.POP:
                         case Tags.Name.TIME:
