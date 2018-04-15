@@ -50,7 +50,7 @@ public class BOActivity extends AppCompatActivity {
             title.setText(removeFileExtensions(file.getName()));
             try {
                 BOXmlParser parser = new BOXmlParser();
-                parser.parseBO(file);
+                parser.parseBO(this, file);
                 if(!parser.areAllTimingsAvailable()) {
                     adapter.disableTimings();
                 }

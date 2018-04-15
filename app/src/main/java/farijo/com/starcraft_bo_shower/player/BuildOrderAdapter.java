@@ -93,7 +93,7 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         act.view = holder.itemView;
 
         holder.pop.setText(act.population);
-        if(act.onFinish >= 0) {
+        if(act.isDepedentOfEntity()) {
             holder.finishFlag.setVisibility(View.VISIBLE);
             holder.onFinishAction.setImageResource(actions.get(act.onFinish).resourceIcon);
         }

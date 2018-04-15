@@ -2,6 +2,7 @@ package farijo.com.starcraft_bo_shower.xml_formatting;
 
 class Tags {
     static final class Name {
+        static final String ACTIONS = "actions";
         static final String ACTION = "action";
         static final String ONFINISH = "onfinish";
         static final String PROD = "prod";

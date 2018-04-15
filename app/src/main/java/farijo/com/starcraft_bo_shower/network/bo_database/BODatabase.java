@@ -32,13 +32,9 @@ public class BODatabase {
             public void run() {
                 try {
                     Class.forName("com.mysql.jdbc.Driver");
-                } catch (ClassNotFoundException ignored) {
-
-                }
-                try {
                     connection = DriverManager.getConnection("jdbc:mysql://"+ip+":"+port+"/"+dbName, dbUsername, dbPassword);
                     wakeUpThreadWaitingConnexion();
-                } catch (SQLException ignored) {
+                } catch (ClassNotFoundException | SQLException ignored) {
 
                 }
             }
@@ -61,14 +57,10 @@ public class BODatabase {
             public void run() {
                 try {
                     waitConnexion();
-                } catch (InterruptedException ignored) {
-
-                }
-                try {
                     PreparedStatement request = prepareBORequestQuery(connection, boName);
                     ResultSet res = request.executeQuery();
                     handleBORequestResult(res);
-                } catch (SQLException ignored) {
+                } catch (InterruptedException | SQLException ignored) {
 
                 }
             }

@@ -1,5 +1,7 @@
 package farijo.com.starcraft_bo_shower.xml_formatting;
 
+import android.content.Context;
+
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -26,7 +28,7 @@ public class BOXmlParser {
         parser = factory.newPullParser();
     }
 
-    public void parseBO(File file) throws IOException, XmlPullParserException {
+    public void parseBO(Context context, File file) throws IOException, XmlPullParserException {
         parser.setInput(new FileInputStream(file), "UTF-8");
 
         final SC2Action TMPL_START_ACT = new SC2Action();
@@ -52,7 +54,7 @@ public class BOXmlParser {
                             currentAction.onFinish = intAttributeValue(Tags.Attribute.REF, -1);
                             break;
                         case Tags.Name.PROD:
-                            currentAction.resourceIcon = SC2Action.getDrawableId(attributeValue(Tags.Attribute.IMAGE));
+                            currentAction.resourceIcon = SC2Action.getDrawableId(context, attributeValue(Tags.Attribute.IMAGE));
                             currentAction.count = intAttributeValue(Tags.Attribute.COUNT, 1);
                         case Tags.Name.POP:
                         case Tags.Name.TIME:
