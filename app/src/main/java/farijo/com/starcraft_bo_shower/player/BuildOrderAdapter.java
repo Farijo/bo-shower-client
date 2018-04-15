@@ -32,12 +32,9 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         timingsOk = false;
     }
 
-    public void add(SC2Action a) {
-        if(a == null) {
-            return;
-        }
-        actions.add(a);
-        notifyItemInserted(actions.size()-1);
+    public void setActions(List<SC2Action> a) {
+        actions = a;
+        notifyDataSetChanged();
     }
 
     public void showTimers(boolean show) {
@@ -96,9 +93,9 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         act.view = holder.itemView;
 
         holder.pop.setText(act.population);
-        if(act.onFinish >= 0) {
+        if(act.isDepedentOfEntity()) {
             holder.finishFlag.setVisibility(View.VISIBLE);
-            holder.onFinishAction.setImageResource(actions.get(act.onFinish).ressourceIcon);
+            holder.onFinishAction.setImageResource(actions.get(act.onFinish).resourceIcon);
         }
         if(timingsOk && showTimer) {
             holder.time.setText(act.strTiming);
@@ -106,7 +103,7 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         } else {
             holder.time.setVisibility(View.GONE);
         }
-        holder.icon.setImageResource(act.ressourceIcon);
+        holder.icon.setImageResource(act.resourceIcon);
         if(act.count > 1) {
             holder.count.setText(String.valueOf(act.count));
         }

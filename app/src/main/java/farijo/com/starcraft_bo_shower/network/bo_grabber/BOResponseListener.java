@@ -1,7 +1,5 @@
 package farijo.com.starcraft_bo_shower.network.bo_grabber;
 
-import android.util.Log;
-
 import com.android.volley.Response;
 
 import org.xmlpull.v1.XmlPullParser;
