@@ -20,7 +20,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".file_explorer.BOExplorerActivity" />
-        <activity android:name=".BODatabaseActivity"></activity>
+        <activity android:name=".BODatabaseActivity" />
+        <activity android:name=".player.BOCreationActivity"></activity>
     </application>
 
 </manifest>

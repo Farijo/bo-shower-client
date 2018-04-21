@@ -37,6 +37,11 @@ public class BuildOrderAdapter extends RecyclerView.Adapter<BuildOrderAdapter.Vi
         notifyDataSetChanged();
     }
 
+    public void addAction(SC2Action action) {
+        actions.add(action);
+        notifyItemInserted(actions.size()-1);
+    }
+
     public void showTimers(boolean show) {
         if(show != showTimer) {
             showTimer = show;

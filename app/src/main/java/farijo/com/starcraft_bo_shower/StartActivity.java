@@ -11,6 +11,7 @@ import java.io.IOException;
 
 import farijo.com.starcraft_bo_shower.file_explorer.BOExplorerActivity;
 import farijo.com.starcraft_bo_shower.network.bo_grabber.BOGrabber;
+import farijo.com.starcraft_bo_shower.player.BOCreationActivity;
 
 public class StartActivity extends AppCompatActivity {
 
@@ -37,6 +38,13 @@ public class StartActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(StartActivity.this, BODatabaseActivity.class));
+            }
+        });
+
+        findViewById(R.id.createBO).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(StartActivity.this, BOCreationActivity.class));
             }
         });
 

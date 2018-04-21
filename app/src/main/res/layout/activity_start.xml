@@ -31,6 +31,14 @@
         android:layout_margin="10dp"
         android:text="Récuperer des BO d'une BDD" />
 
+    <Button
+        android:id="@+id/createBO"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="10dp"
+        android:text="Créer un BO" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/liste"
         android:layout_width="match_parent"
