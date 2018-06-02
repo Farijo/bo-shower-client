@@ -1,18 +1,13 @@
 package farijo.com.starcraft_bo_shower.file_explorer;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.NumberPicker;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -47,42 +42,11 @@ public class BOExplorerActivity extends AppCompatActivity {
                 removeLastFragment();
             }
         });
-
-        showIpPortDialog();
-    }
-
-    private void showIpPortDialog() {
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.server_chooser, null);
-        final EditText ipServer = dialogView.findViewById(R.id.ip_server);
-        final NumberPicker portServer = dialogView.findViewById(R.id.port_server);
-        portServer.setMaxValue(Short.MAX_VALUE - Short.MIN_VALUE);
-        ipServer.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_CLASS_TEXT);
-        ipServer.setText("192.168.0.13");
-        portServer.setValue(4040);
-        new AlertDialog.Builder(this)
-                .setTitle("IP & port")
-                .setCancelable(false)
-                .setView(dialogView)
-                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        synchronizer = new FileSynchronizer(
-                                BOExplorerActivity.this,
-                                ipServer.getText().toString(),
-                                portServer.getValue()
-                        );
-                        synchronizer.start();
-                    }
-                })
-                .show();
     }
 
     @Override
     protected void onDestroy() {
         isDestroyed = true;
-        synchronized (synchronizer) {
-            synchronizer.notify();
-        }
         super.onDestroy();
     }
 

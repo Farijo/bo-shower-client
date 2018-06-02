@@ -12,7 +12,6 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 
 import farijo.com.starcraft_bo_shower.R;
-import farijo.com.starcraft_bo_shower.network.custom_server.FileSynchronizer;
 
 /**
  * Created by Teddy on 30/12/2017.
@@ -76,14 +75,10 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
     }
 
     class FileViewHolder extends ViewHolder {
-        View btnDownloadStart;
-        View btnDownload;
         View btnStart;
 
         FileViewHolder(View itemView) {
             super(itemView);
-            btnDownloadStart = itemView.findViewById(R.id.download_launch);
-            btnDownload = itemView.findViewById(R.id.download);
             btnStart = itemView.findViewById(R.id.launch_local);
         }
 
@@ -91,22 +86,6 @@ public class BOFileAdapter extends RecyclerView.Adapter<BOFileAdapter.ViewHolder
         public void setData(final VirtualFile file) {
             super.setData(file);
             final String fullPathPath = fragment.fullPath + "/" + file.fileName;
-            if (btnDownloadStart != null) {
-                btnDownloadStart.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        activity.synchronizer.addFileToDownload(new FileSynchronizer.BasicRequest(file, fullPathPath, ID), true);
-                    }
-                });
-            }
-            if (btnDownload != null) {
-                btnDownload.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        activity.synchronizer.addFileToDownload(new FileSynchronizer.BasicRequest(file, fullPathPath, ID));
-                    }
-                });
-            }
             if (btnStart != null) {
                 btnStart.setOnClickListener(new View.OnClickListener() {
                     @Override
